@@ -5,7 +5,12 @@ import './assets/css/global.css'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
-axios.defaults.baseURL = '127.0.0.1/test'
+axios.defaults.baseURL = 'http://db.com/api'
+axios.interceptors.request.use(config => {
+  config.headers.token = window.sessionStorage.getItem('token')
+  // console.log(config)
+  return config
+})
 Vue.prototype.$http = axios
 Vue.config.productionTip = false
 Vue.use(ElementUI)

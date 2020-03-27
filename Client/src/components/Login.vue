@@ -25,8 +25,8 @@ export default {
   data() {
     return {
       form: {
-        name: '',
-        psw: ''
+        name: 'lzx',
+        psw: '123456789'
       },
       rule: {
         name: [
@@ -43,13 +43,20 @@ export default {
   methods: {
     resetForm: function() {
       this.$refs.loginForm.resetFields()
-      this.$message('已重置', 'success')
-      this.$router.push('/home')
+      this.$message.success('已重置')
     },
     login() {
-      this.$refs.loginForm.validate(valid => {
+      this.$refs.loginForm.validate(async valid => {
         if (!valid) return
-        this.$http.post('login', this.form)
+        const result = await this.$http.post('/token', this.form)
+        // console.log(result)
+        if (result.status !== 200) {
+          return this.$message.error('登陆失败！')
+        } else {
+          this.$message.success('登陆成功！')
+          window.sessionStorage.setItem('token', result.data)
+          this.$router.push('/home')
+        }
       })
     }
   }
