@@ -4,6 +4,7 @@ namespace app\api\model;
 use app\lib\enum\ScopeEnum;
 use app\lib\exception\TokenException;
 use app\lib\exception\UserException;
+use app\lib\RSADecrypt;
 use think\Model;
 
 class User extends Model
@@ -43,6 +44,8 @@ class User extends Model
     }
     public function getToken($username,$psw)
     {
+        $rsa = new RSADecrypt();
+        $psw = $rsa->privDecrypt($psw);
         $result = self::where('username','=',$username)->where('psw','=',md5($psw))->find();
         if($result){
             if($result->status){

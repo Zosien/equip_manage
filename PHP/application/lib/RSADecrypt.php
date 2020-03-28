@@ -1,0 +1,98 @@
+<?php
+namespace app\lib;
+
+class RSADecrypt
+{
+    private $_config = [
+        'public_key' => '',
+        'private_key' => '',
+    ];
+    private $private_path;
+    private $public_path;
+    public function __construct() {
+        $this->private_path = getenv('PRIVATE');
+        $this->public_path = getenv('PUBLIC');
+        $this->_config['private_key'] = $this->_getContents($this->private_path);
+        $this->_config['public_key'] = $this->_getContents($this->public_path);
+    }
+
+    /**
+     * @uses 获取文件内容
+     * @param $file_path string
+     * @return bool|string
+     */
+    private function _getContents($file_path) {
+        file_exists($file_path) or die ('密钥或公钥的文件路径错误');
+        return file_get_contents($file_path);
+    }
+
+    /**     
+     * @uses 获取私钥
+     * @return bool|resource     
+     */ 
+    private function _getPrivateKey() {
+       $priv_key = $this->_config['private_key'];
+       return openssl_pkey_get_private($priv_key);
+    }
+
+    /**     
+     * @uses 获取公钥
+     * @return bool|resource     
+     */    
+    public function _getPublicKey() {        
+        $public_key = $this->_config['public_key'];
+        return openssl_pkey_get_public($public_key);
+    }
+    public function getPublicKey(){
+        $public_key = $this->_config['public_key'];
+        return $public_key;
+    }
+
+    /**     
+     * @uses 私钥加密
+     * @param string $data     
+     * @return null|string     
+     */    
+    public function privEncrypt($data = '') {        
+        if (!is_string($data)) {
+            return null;       
+        }
+        return openssl_private_encrypt($data, $encrypted, $this->_getPrivateKey()) ? base64_encode($encrypted) : null;
+    }
+
+    /**     
+     * @uses 公钥加密     
+     * @param string $data     
+     * @return null|string     
+     */    
+    public function publicEncrypt($data = '') {        
+        if (!is_string($data)) {
+            return null;        
+        }        
+        return openssl_public_encrypt($data, $encrypted, $this->_getPublicKey()) ? base64_encode($encrypted) : null;
+    }
+
+    /**
+     * @uses 私钥解密     
+     * @param string $encrypted     
+     * @return null     
+     */    
+    public function privDecrypt($encrypted = '') {        
+        if (!is_string($encrypted)) {
+            return null;        
+        }
+        return (openssl_private_decrypt(base64_decode($encrypted), $decrypted, $this->_getPrivateKey())) ? $decrypted : $decrypted;
+    }    
+
+    /**     
+     * @uses 公钥解密     
+     * @param string $encrypted     
+     * @return null     
+     */    
+    public function publicDecrypt($encrypted = '') {        
+        if (!is_string($encrypted)) {
+            return null;        
+        }        
+           return (openssl_public_decrypt(base64_decode($encrypted), $decrypted, $this->_getPublicKey())) ? $decrypted : null;
+    }
+}

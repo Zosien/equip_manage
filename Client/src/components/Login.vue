@@ -37,7 +37,8 @@ export default {
           { required: true, message: '请输入密码', trigger: 'blur' },
           { required: true, message: '请输入6到16位字符', trigger: 'blur' }
         ]
-      }
+      },
+      publicKey: ''
     }
   },
   methods: {
@@ -48,16 +49,28 @@ export default {
     login() {
       this.$refs.loginForm.validate(async valid => {
         if (!valid) return
-        const result = await this.$http.post('/token', this.form)
-        console.log(result)
-        console.log(result.data.token)
-        if (result.status !== 200) {
-          return this.$message.error('登陆失败！')
-        } else {
-          this.$message.success('登陆成功！')
-          window.sessionStorage.setItem('token', result.data)
-          // this.$router.push('/home')
-        }
+        this.$http.get('/key').then(async res => {
+          if (res.status === 200) {
+            const jse = new this.$jse()
+            const PublicKeyEncode = res.data.key
+            const PublicKey = window.atob(PublicKeyEncode)
+            // console.log(PublicKey)
+            jse.setPublicKey(PublicKey)
+            const psw = jse.encrypt(this.form.psw)
+            // console.log(psw)
+            const result = await this.$http.post('/token', { name: this.form.name, psw: psw })
+            // console.log(result)
+            if (result.status !== 200) {
+              return this.$message.error('登陆失败！')
+            } else {
+              this.$message.success('登陆成功！')
+              window.sessionStorage.setItem('token', result.data)
+              this.$router.push('/home')
+            }
+          } else {
+            this.$message.error('获取公钥失败，请联系管理员')
+          }
+        })
       })
     }
   }
