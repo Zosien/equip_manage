@@ -13,7 +13,6 @@ class Token
     {
         (new TokenValidate())->goCheck();
         $user = new User();
-        // var_dump(Env::get('MYSQL_HOST'));
         $token = $user->getToken($name, $psw);
         return [
             'token' => $token
