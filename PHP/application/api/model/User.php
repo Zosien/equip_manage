@@ -41,7 +41,7 @@ class User extends Model
         $cachedValue['scope'] = $scope;
         return $cachedValue;
     }
-    public function login($username,$psw)
+    public function getToken($username,$psw)
     {
         $result = self::where('username','=',$username)->where('psw','=',md5($psw))->find();
         if($result){

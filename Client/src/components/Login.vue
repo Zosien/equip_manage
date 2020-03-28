@@ -49,13 +49,14 @@ export default {
       this.$refs.loginForm.validate(async valid => {
         if (!valid) return
         const result = await this.$http.post('/token', this.form)
-        // console.log(result)
+        console.log(result)
+        console.log(result.data.token)
         if (result.status !== 200) {
           return this.$message.error('登陆失败！')
         } else {
           this.$message.success('登陆成功！')
           window.sessionStorage.setItem('token', result.data)
-          this.$router.push('/home')
+          // this.$router.push('/home')
         }
       })
     }

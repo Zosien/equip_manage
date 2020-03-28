@@ -8,7 +8,6 @@ import axios from 'axios'
 axios.defaults.baseURL = 'http://db.com/api'
 axios.interceptors.request.use(config => {
   config.headers.token = window.sessionStorage.getItem('token')
-  // console.log(config)
   return config
 })
 Vue.prototype.$http = axios
