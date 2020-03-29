@@ -8,10 +8,10 @@ import axios from 'axios'
 import JSEncrypt from 'jsencrypt'
 
 axios.defaults.baseURL = 'http://db.com/api'
-// axios.interceptors.request.use(config => {
-//   config.headers.token = window.sessionStorage.getItem('token')
-//   return config
-// })
+axios.interceptors.request.use(config => {
+  config.headers.token = window.sessionStorage.getItem('token')
+  return config
+})
 Vue.prototype.$http = axios
 Vue.prototype.$jse = JSEncrypt
 

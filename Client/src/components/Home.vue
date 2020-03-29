@@ -37,10 +37,14 @@
 export default {
   methods: {
     logout() {
-      window.sessionStorage.clear()
-      this.$http.get('test')
-      this.$message.success('退出成功')
-      this.$router.push('/login')
+      this.$http.delete('/key').then(res => {
+        window.sessionStorage.clear()
+        this.$message.success('退出成功')
+        this.$router.push('/login')
+      }).catch(err => {
+        console.log(err.response.data)
+        this.$message.error('请检查您的网络')
+      })
     }
   }
 }

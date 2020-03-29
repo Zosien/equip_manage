@@ -11,5 +11,9 @@
 
 use think\Route;
 Route::post('api/token','api/Token/getToken');
-Route::get('api/test','api/Token/test');
 Route::get('api/key','api/PublicKey/get');
+Route::delete('api/key','api/PublicKey/delete');
+
+
+
+Route::get('api/test','api/Token/test');
