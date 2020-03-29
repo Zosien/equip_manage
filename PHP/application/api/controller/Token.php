@@ -9,11 +9,11 @@ use think\Request;
 
 class Token
 {
-    public function getToken($name, $psw)
+    public function getToken()
     {
         (new TokenValidate())->goCheck();
         $user = new User();
-        $token = $user->getToken($name, $psw);
+        $token = $user->getToken();
         return [
             'token' => $token
         ];

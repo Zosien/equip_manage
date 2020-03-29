@@ -6,6 +6,7 @@ use app\lib\exception\TokenException;
 use app\lib\exception\UserException;
 use app\lib\RSADecrypt;
 use think\Model;
+use think\Request;
 
 class User extends Model
 {
@@ -42,11 +43,13 @@ class User extends Model
         $cachedValue['scope'] = $scope;
         return $cachedValue;
     }
-    public function getToken($username,$psw)
+    public function getToken()
     {
+        $req = Request::instance();
+        $data = $req->post();
         $rsa = new RSADecrypt();
-        $psw = $rsa->privDecrypt($psw);
-        $result = self::where('username','=',$username)->where('psw','=',md5($psw))->find();
+        $psw = $rsa->privDecrypt($data['psw']);
+        $result = self::where('username','=',$data['name'])->where('psw','=',md5($psw))->where('rank','=',$data['rank'])->find();
         if($result){
             if($result->status){
                 $token = $this->generateToken();
@@ -56,6 +59,7 @@ class User extends Model
             }
             else{
                 throw new UserException([
+                    'code' => 401,
                     'msg' => '您被禁止登陆！',
                     'errorCode' => 2001
                 ]);
@@ -63,7 +67,8 @@ class User extends Model
         }
         else{
             throw new UserException([
-                'msg' => "账号不存在",
+                'code' => 401,
+                'msg' => "账号或密码错误",
                 'errorCode' => 2000
             ]);
         }

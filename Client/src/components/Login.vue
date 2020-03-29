@@ -11,6 +11,14 @@
         <el-form-item prop="psw">
           <el-input placeholder="密码" prefix-icon="el-icon-lock" v-model="form.psw" type="password"></el-input>
         </el-form-item>
+        <el-select v-model="form.rank" placeholder="请选择">
+          <el-option
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value">
+          </el-option>
+        </el-select>
         <el-form-item class="btns">
           <el-button type="primary" @click="login()">登陆</el-button>
           <el-button type="info" @click="resetForm()">重置</el-button>
@@ -26,8 +34,28 @@ export default {
     return {
       form: {
         name: 'lzx',
-        psw: '123456789'
+        psw: '123456789',
+        rank: 'student'
       },
+      options: [
+        {
+          value: 'student',
+          label: '学生'
+        },
+        {
+          value: 'teacher',
+          label: '教师'
+        },
+        {
+          value: 'engineer',
+          label: '工程师'
+        },
+        {
+          value: 'root',
+          label: '管理员'
+        }
+      ],
+
       rule: {
         name: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -50,26 +78,24 @@ export default {
       this.$refs.loginForm.validate(async valid => {
         if (!valid) return
         this.$http.get('/key').then(async res => {
-          if (res.status === 200) {
-            const jse = new this.$jse()
-            const PublicKeyEncode = res.data.key
-            const PublicKey = window.atob(PublicKeyEncode)
-            // console.log(PublicKey)
-            jse.setPublicKey(PublicKey)
-            const psw = jse.encrypt(this.form.psw)
-            // console.log(psw)
-            const result = await this.$http.post('/token', { name: this.form.name, psw: psw })
-            // console.log(result)
-            if (result.status !== 200) {
-              return this.$message.error('登陆失败！')
-            } else {
-              this.$message.success('登陆成功！')
-              window.sessionStorage.setItem('token', result.data)
-              this.$router.push('/home')
-            }
-          } else {
-            this.$message.error('获取公钥失败，请联系管理员')
-          }
+          const jse = new this.$jse()
+          const PublicKeyEncode = res.data.key
+          const PublicKey = window.atob(PublicKeyEncode)
+          // console.log(PublicKey)
+          jse.setPublicKey(PublicKey)
+          const psw = jse.encrypt(this.form.psw)
+          // console.log(psw)
+          await this.$http.post('/token', { name: this.form.name, psw: psw, rank: this.form.rank }).then(res => {
+            // console.log(res)
+            this.$message.success('登陆成功！')
+            window.sessionStorage.setItem('token', res.data.token)
+            this.$router.push('/home')
+          }).catch(err => {
+            console.log(err.request)
+            this.$message.error(err.response.data.msg)
+          })
+        }).catch(err => {
+          this.$message.error(err.response.data.msg)
         })
       })
     }
@@ -84,7 +110,7 @@ export default {
 }
 .login_box {
   width: 450px;
-  height: 300px;
+  height: 350px;
   background-color: #fff;
   border-radius: 3px;
   position: absolute;
