@@ -1,4 +1,5 @@
 <?php
+
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
@@ -10,10 +11,16 @@
 // +----------------------------------------------------------------------
 
 use think\Route;
-Route::post('api/token','api/Token/getToken');
-Route::get('api/key','api/PublicKey/get');
-Route::delete('api/key','api/PublicKey/delete');
 
+Route::post('api/token', 'api/Token/getToken');
+Route::get('api/key', 'api/PublicKey/get');
+Route::delete('api/token', 'api/Token/delete');
+Route::get('api/refresh_token', 'api/Token/refreshToken');
+Route::get('api/menu/:scope', 'api/Menu/menu');
+Route::get('api/user/:keyword', 'api/User/getUser');
+Route::get('api/user', 'api/User/getUser');
+Route::delete('api/user', 'api/User/delUser');
+Route::patch('api/user', 'api/User/modify');
 
-
-Route::get('api/test','api/Token/test');
+Route::get('api/test', 'api/Token/test');
+Route::get('api/cache/:name', 'api/ApiTest/getCache');

@@ -16,8 +16,8 @@
             v-for="item in options"
             :key="item.value"
             :label="item.label"
-            :value="item.value">
-          </el-option>
+            :value="item.value"
+          ></el-option>
         </el-select>
         <el-form-item class="btns">
           <el-button type="primary" @click="login()">登陆</el-button>
@@ -33,9 +33,9 @@ export default {
   data() {
     return {
       form: {
-        name: 'lzx',
+        name: 'teacher',
         psw: '123456789',
-        rank: 'student'
+        rank: 'teacher'
       },
       options: [
         {
@@ -77,26 +77,41 @@ export default {
     login() {
       this.$refs.loginForm.validate(async valid => {
         if (!valid) return
-        this.$http.get('/key').then(async res => {
-          const jse = new this.$jse()
-          const PublicKeyEncode = res.data.key
-          const PublicKey = window.atob(PublicKeyEncode)
-          // console.log(PublicKey)
-          jse.setPublicKey(PublicKey)
-          const psw = jse.encrypt(this.form.psw)
-          // console.log(psw)
-          await this.$http.post('/token', { name: this.form.name, psw: psw, rank: this.form.rank }).then(res => {
-            // console.log(res)
-            this.$message.success('登陆成功！')
-            window.sessionStorage.setItem('token', res.data.token)
-            this.$router.push('/home')
-          }).catch(err => {
-            console.log(err.request)
-            this.$message.error(err.response.data.msg)
+        await this.$http
+          .get('/key')
+          .then(async res => {
+            const jse = new this.$jse()
+            const PublicKeyEncode = res.data.key
+            const PublicKey = window.atob(PublicKeyEncode)
+            jse.setPublicKey(PublicKey)
+            const psw = jse.encrypt(this.form.psw)
+            await this.$http
+              .post('/token', {
+                name: this.form.name,
+                psw: psw,
+                rank: this.form.rank
+              })
+              .then(res => {
+                this.$message.success('登陆成功！')
+                window.sessionStorage.setItem('token', res.data.token)
+                window.sessionStorage.setItem(
+                  'exp',
+                  res.data.expire + new Date().getTime()
+                )
+                const redirect = decodeURIComponent(
+                  this.$route.query.redirect || '/home'
+                )
+                this.$router.push(redirect)
+              })
+              .catch(err => {
+                console.log(err.data)
+                this.$message.error(err.data.msg)
+              })
           })
-        }).catch(err => {
-          this.$message.error(err.response.data.msg)
-        })
+          .catch(err => {
+            console.log('err', err.data)
+            this.$message.error(err.data.msg)
+          })
       })
     }
   }
