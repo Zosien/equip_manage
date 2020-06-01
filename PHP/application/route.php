@@ -21,6 +21,10 @@ Route::get('api/user/:keyword', 'api/User/getUser');
 Route::get('api/user', 'api/User/getUser');
 Route::delete('api/user', 'api/User/delUser');
 Route::patch('api/user', 'api/User/modify');
+Route::post('api/user/upload','api/User/upload');
+Route::post('api/user','api/User/save');
 
-Route::get('api/test', 'api/Token/test');
+Route::get('api/test', 'api/ApiTest/getTest');
+Route::post('api/test','api/ApiTest/postTest');
 Route::get('api/cache/:name', 'api/ApiTest/getCache');
+

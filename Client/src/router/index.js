@@ -5,6 +5,7 @@ import Home from '../components/Home.vue'
 import Welcome from '../components/Welcome.vue'
 import UserList from '../components/user/List.vue'
 import UserAdd from '../components/user/Add.vue'
+import Cookies from 'js-cookie'
 Vue.use(VueRouter)
 
 const router = new VueRouter({
@@ -37,18 +38,9 @@ const router = new VueRouter({
 })
 // 导航守卫，可以用axios拦截器代替
 router.beforeEach((to, from, next) => {
-  // const token = window.sessionStorage.getItem('token')
-  // if (to.path === '/login') {
-  //   if (!token) return next()
-  //   else {
-  //     return next('/home')
-  //   }
-  // }
-  // if (!token) return next('/login')
-  // next()
-  const token = window.sessionStorage.getItem('token')
+  const token = Cookies.get('token')
   if (to.meta.requireAuth) { // 判断该路由是否需要登录权限
-    if (token) { // 通过vuex state获取当前的token是否存在
+    if (token) {
       next()
     } else {
       next({

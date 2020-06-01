@@ -121,7 +121,6 @@ export default {
       await this.$http
         .get('/user')
         .then(res => {
-          console.log(res.data)
           this.originalData = res.data
           this.tableData = res.data
         })
@@ -159,8 +158,6 @@ export default {
         })
     },
     handleEnable(row) {
-      // console.log(this.tableData)
-      // console.log(this.originalData)
       this.$http
         .patch('/user', {
           id: row.id,
@@ -168,9 +165,6 @@ export default {
         })
         .then(res => {
           row.status = 1
-          console.log(row)
-          // console.log(this.tableData)
-          // console.log(this.originalData)
           this.$message.success('success')
         })
         .catch(err => {

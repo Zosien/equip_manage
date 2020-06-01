@@ -91,7 +91,7 @@ class Token extends Model
     public static function getCurrentTokenVar($key)
     {
         $req = Request::instance();
-        $token = $req->header('token');
+        $token = $req->header('Authorization');
         $vars = Cache::get($token);
         if (!$vars) {
             throw new TokenException();

@@ -2,8 +2,11 @@
 
 namespace app\api\model;
 
+use app\lib\exception\ParameterException;
 use app\lib\exception\UserException;
 use app\lib\RSADecrypt;
+use Exception;
+use think\Db;
 use think\Model;
 use think\Request;
 
@@ -24,6 +27,34 @@ class User extends Model
         ]);
 
         return $user->id;
+    }
+    public static function newUserInfo()
+    {
+        $rsa = new RSADecrypt();
+        $req = Request::instance();
+        $param = $req->post();
+        $psw = $param['psw'];
+        $psw = $rsa->privDecrypt($psw);
+        if(!$psw){
+            throw new ParameterException();
+        }
+        $param['psw'] = $psw;
+        foreach($param as $key => &$val){
+            if(empty($val) && $val !== 0){
+                $val = null;
+            }
+        }
+        var_dump($param);
+        $info = array_slice($param,2);
+        $user = array_slice($param,0,2);
+        $insert = "insert into user_info(institute,class,name,stu_num,gender,age) values (:institute,:class,:name,:stu_num,:gender,:age);";
+        $res = Db::execute($insert,$info);
+        if(!$res){
+            throw new Exception();
+        }
+        $update = "update user set username = :username and psw = md5(:psw);";
+        $res = Db::execute($update,$user);
+        return $res;
     }
 
     public static function getUser($keyword, $scope)

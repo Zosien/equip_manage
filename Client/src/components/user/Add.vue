@@ -6,34 +6,58 @@
       <el-breadcrumb-item>添加用户</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card>
-      <el-form ref="form" :model="form" :rules="rules" label-width="130px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model.trim="form.username" class="h-40 w-200" :maxlength="12"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model.trim="form.password" class="h-40 w-200"></el-input>
-        </el-form-item>
-        <el-form-item label="真实姓名" prop="realname">
-          <el-input v-model.trim="form.realname" class="h-40 w-200"></el-input>
-        </el-form-item>
-        <el-form-item label="部门" prop="structure_id">
-          <el-select v-model="form.structure_id" placeholder="请选择部门" class="w-200">
-            <!-- <el-option v-for="item in orgsOptions" :label="item.title" :value="item.id" v-bind="index"></el-option> -->
-          </el-select>
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model.trim="form.remark" class="h-40 w-200"></el-input>
-        </el-form-item>
-        <el-form-item label="用户组">
-          <el-checkbox-group v-model="selectedGroups">
-            <!-- <el-checkbox v-for="item in groupOptions" :label="item.title" class="form-checkbox"></el-checkbox> -->
-          </el-checkbox-group>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="add('form')" :loading="isLoading">提交</el-button>
-          <el-button @click="$base.goBack()">返回</el-button>
-        </el-form-item>
-      </el-form>
+      <el-tabs v-model="activeName" @tab-click="handleClick">
+        <el-tab-pane label="逐个添加" name="first">
+          <el-form ref="addForm" :model="form" :rules="rules" label-width="130px">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model.trim="form.username" class="h-40 w-200"></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="psw">
+              <el-input v-model.trim="form.psw" class="h-40 w-200" type="password"></el-input>
+            </el-form-item>
+            <el-form-item label="学院" prop="institute">
+              <el-select v-model="form.institute" placeholder="请选择学院" class="w-200">
+                <el-option v-for="item in institutes" :key="item.index" :label="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="班级" prop="class">
+              <el-input v-model.trim="form.class" class="h-40 w-200"></el-input>
+            </el-form-item>
+            <el-form-item label="姓名" prop="name">
+              <el-input v-model.trim="form.name" class="h-40 w-200"></el-input>
+            </el-form-item>
+            <el-form-item label="学号" prop="stu_num">
+              <el-input v-model.trim="form.stu_num" class="h-40 w-200"></el-input>
+            </el-form-item>
+            <el-form-item label="性别" prop="gender">
+              <el-select v-model="form.gender" placeholder="请输入性别" class="h-40 w-200">
+                <el-option label="男" value="男"></el-option>
+                <el-option label="女" value="女"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="年龄" prop="age">
+              <el-input v-model.number="form.age" class="h-40 w-200"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="add()">提交</el-button>
+              <el-button @click="$base.goBack()">返回</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="批量添加" name="second">
+          <el-upload
+            class="upload-demo"
+            ref="upload"
+            action="http://db.com/api/user/upload"
+            accept=".xlsx"
+            :auto-upload="false"
+            :on-success="handleSuccess"
+          >
+            <el-button slot="trigger" type="primary">选取文件</el-button>
+            <el-button style="margin-left: 10px" type="success" @click="submit">提交</el-button>
+          </el-upload>
+        </el-tab-pane>
+      </el-tabs>
     </el-card>
   </div>
 </template>
@@ -48,96 +72,72 @@
 <script>
 export default {
   data() {
-    var nameValidator = (rule, value, callback) => {
-      if (!Number.isInteger(value)) {
-        callback(new Error('必须是数字'))
+    var validateStuNum = (rule, value, callback) => {
+      var regx = /^20((1[4-9])|(20))\d{6}$/
+      if (!regx.test(value)) {
+        return callback(new Error('请输入正确的学号'))
       }
+      callback()
     }
     return {
       isLoading: false,
+      activeName: 'first',
       form: {
-        username: '',
-        password: '',
-        realname: '',
-        structure_id: null,
-        remark: '',
-        groups: []
+        username: '2017040353',
+        psw: '2017040353',
+        institute: '信息学院',
+        class: '计科1704',
+        name: '李泽祥',
+        stu_num: '2017040353',
+        gender: '男',
+        age: 24
       },
+      data: {},
       orgsOptions: [],
       groupOptions: [],
       selectedGroups: [],
       selectedIds: [],
+      institutes: ['信息学院', '化工学院', '机械学院', '文法学院'],
       rules: {
         username: [
-          { required: true, message: '请输入用户名' },
-          { required: true, validator: nameValidator, trigger: 'blur' }
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 3, max: 10, message: '用户名长度为3-10位', trigger: 'blur' }
         ],
-        password: [{ required: true, message: '请输入用户密码' }],
-        realname: [{ required: true, message: '请输入真实姓名' }],
-        structure_id: [{ required: true, message: '请选择用户部门' }]
+        psw: [
+          { required: true, message: '请输入用户密码', trigger: 'blur' },
+          { min: 6, max: 16, message: '密码长度为6-16位', trigger: 'blur' }
+        ],
+        institute: [{ required: true, message: '请输入学院' }],
+        class: [{ required: true, message: '请输入班级' }],
+        name: [{ required: true, message: '请输入姓名' }],
+        stu_num: [
+          { required: true, message: '请输入学号' },
+          { validator: validateStuNum, trigger: 'blur' }
+        ]
+        // age: [{ type: 'number', message: '年龄必须为数字值' }]
       }
     }
   },
   methods: {
-    //   selectCheckbox() {
-    //     let temp = false
-    //     _(this.groupOptions).forEach(res => {
-    //       if (this.selectedGroups.toString().indexOf(res.title) > -1) {
-    //         this.selectedIds.push(res.id)
-    //       }
-    //     })
-    //     if (this.selectedIds.length) {
-    //       this.form.groups = _.cloneDeep(this.selectedIds)
-    //       temp = true
-    //     }
-    //     this.selectedIds = []
-    //     return temp
-    //   },
-    //   add(form) {
-    //     if (!this.selectCheckbox()) {
-    //       _g.toastMsg('warning', '请选择用户组')
-    //       return
-    //     }
-    //     console.log('res = ', _g.j2s(this.form))
-    //     this.$refs.form.validate(pass => {
-    //       if (pass) {
-    //         this.isLoading = !this.isLoading
-    //         this.apiPost('admin/users', this.form).then(res => {
-    //           this.handelResponse(
-    //             res,
-    //             data => {
-    //               _g.toastMsg('success', '添加成功')
-    //               _g.clearVuex('setUsers')
-    //               setTimeout(() => {
-    //                 this.goback()
-    //               }, 1500)
-    //             },
-    //             () => {
-    //               this.isLoading = !this.isLoading
-    //             }
-    //           )
-    //         })
-    //       }
-    //     })
-    //   },
-    //   getAllGroups() {
-    //     this.apiGet('admin/groups').then(res => {
-    //       this.handelResponse(res, data => {
-    //         this.groupOptions = data
-    //       })
-    //     })
-    //   },
-    //   getAllOrgs() {
-    //     this.apiGet('admin/structures').then(res => {
-    //       this.handelResponse(res, data => {
-    //         this.orgsOptions = data
-    //       })
-    //     })
-    //   }
-    // },
+    submit() {
+      this.$refs.upload.submit()
+    },
+    add() {
+      var _ = this
+      this.$refs.addForm.validate(valid => {
+        if (!valid) return
+        this.data = JSON.parse(JSON.stringify(this.form))
+        this.data.psw = _.$jse.encrypt(this.form.psw)
+        this.$http.post('user', this.data)
+      })
+    },
+    handleSuccess(response, file, fileList) {
+      this.$message.success('添加用户成功')
+    }
     // created() {
     //   this.getAllGroups()
     //   this.getAllOrgs()
+    // }
   }
 }
 </script>

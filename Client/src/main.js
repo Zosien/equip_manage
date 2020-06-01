@@ -7,12 +7,12 @@ import 'element-ui/lib/theme-chalk/index.css'
 import axios from 'axios'
 import JSEncrypt from 'jsencrypt'
 import common from './assets/js/common.js'
-
+import Cookies from 'js-cookie'
 axios.defaults.baseURL = 'http://db.com/api'
 
 var isTokenRefreshing = false // 刷新token的请求不拦截
 axios.interceptors.request.use(config => {
-  config.headers.token = window.sessionStorage.getItem('token')
+  config.headers.Authorization = Cookies.get('token')
   var exp = window.sessionStorage.getItem('exp')
   var time = (new Date()).getTime()
   if (exp && exp - time <= 50000 && exp - time > 0 && !isTokenRefreshing) { // 即将过期，刷新token
@@ -50,16 +50,32 @@ axios.interceptors.response.use(response => {
 }, err => {
   if (err.response) {
     if (err.response.status === 401) {
-      localStorage.clear()
+      localStorage.removeItem('token')
       router.push('/login')
     }
   }
   return Promise.reject(err.response)
 }
 )
+const jse = new JSEncrypt()
+if (!localStorage.getItem('key')) {
+  this.$http
+    .get('/key')
+    .then(res => {
+      const PublicKeyEncode = res.data.key
+      const PublicKey = window.atob(PublicKeyEncode)
+      localStorage.setItem('key', PublicKey)
+    })
+    .catch(err => {
+      this.$message.error(err.data.msg)
+    })
+}
+jse.setPublicKey(localStorage.getItem('key'))
 Vue.prototype.$http = axios
-Vue.prototype.$jse = JSEncrypt
+Vue.prototype.$jse = jse
 Vue.prototype.$base = common
+Vue.prototype.$cookie = Cookies
+window.Cookie = Cookies
 
 Vue.config.productionTip = false
 Vue.use(ElementUI)

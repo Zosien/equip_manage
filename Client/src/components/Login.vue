@@ -20,8 +20,8 @@
           ></el-option>
         </el-select>
         <el-form-item class="btns">
-          <el-button type="primary" @click="login()">登陆</el-button>
-          <el-button type="info" @click="resetForm()">重置</el-button>
+          <el-button type="primary" @click="login">登陆</el-button>
+          <el-button type="info" @click="resetForm">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import Cookies from 'js-cookie'
 export default {
   data() {
     return {
@@ -59,11 +60,11 @@ export default {
       rule: {
         name: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
-          { required: true, message: '请输入3到10个字符', trigger: 'blur' }
+          { min: 3, max: 10, message: '请输入3到10个字符', trigger: 'blur' }
         ],
         psw: [
           { required: true, message: '请输入密码', trigger: 'blur' },
-          { required: true, message: '请输入6到16位字符', trigger: 'blur' }
+          { min: 6, max: 16, message: '请输入6到16位字符', trigger: 'blur' }
         ]
       },
       publicKey: ''
@@ -75,41 +76,43 @@ export default {
       this.$message.success('已重置')
     },
     login() {
+      var _ = this
       this.$refs.loginForm.validate(async valid => {
         if (!valid) return
+        // if (!localStorage.getItem('key')) {
+        //   await this.$http
+        //     .get('/key')
+        //     .then(async res => {
+        //       const PublicKeyEncode = res.data.key
+        //       const PublicKey = window.atob(PublicKeyEncode)
+        //       localStorage.setItem('key', PublicKey)
+        //     })
+        //     .catch(err => {
+        //       this.$message.error(err.data.msg)
+        //     })
+        // }
+        // _.$jse.setPublicKey(localStorage.getItem('key'))
+        const psw = _.$jse.encrypt(this.form.psw)
         await this.$http
-          .get('/key')
-          .then(async res => {
-            const jse = new this.$jse()
-            const PublicKeyEncode = res.data.key
-            const PublicKey = window.atob(PublicKeyEncode)
-            jse.setPublicKey(PublicKey)
-            const psw = jse.encrypt(this.form.psw)
-            await this.$http
-              .post('/token', {
-                name: this.form.name,
-                psw: psw,
-                rank: this.form.rank
-              })
-              .then(res => {
-                this.$message.success('登陆成功！')
-                window.sessionStorage.setItem('token', res.data.token)
-                window.sessionStorage.setItem(
-                  'exp',
-                  res.data.expire + new Date().getTime()
-                )
-                const redirect = decodeURIComponent(
-                  this.$route.query.redirect || '/home'
-                )
-                this.$router.push(redirect)
-              })
-              .catch(err => {
-                console.log(err.data)
-                this.$message.error(err.data.msg)
-              })
+          .post('/token', {
+            name: this.form.name,
+            psw: psw,
+            rank: this.form.rank
+          })
+          .then(res => {
+            this.$message.success('登陆成功！')
+            Cookies.set('token', res.data.token, { expires: 3 })
+            // window.sessionStorage.setItem('token', res.data.token)
+            // window.sessionStorage.setItem(
+            //   'exp',
+            //   res.data.expire + new Date().getTime()
+            // )
+            const redirect = decodeURIComponent(
+              this.$route.query.redirect || '/home'
+            )
+            this.$router.push(redirect)
           })
           .catch(err => {
-            console.log('err', err.data)
             this.$message.error(err.data.msg)
           })
       })

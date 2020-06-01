@@ -45,8 +45,7 @@ export default {
       this.$http
         .delete('/token')
         .then(res => {
-          console.log(res)
-          window.sessionStorage.clear()
+          Cookie.remove('token')
           this.$message.success('退出成功')
           this.$router.push('/login')
         })
