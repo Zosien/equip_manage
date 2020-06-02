@@ -74,4 +74,13 @@ class BaseValidate extends Validate
             return true;
         } else return false;
     }
+    public function positiveIntArray($value, $rule = '', $data = '', $field = '')
+    {
+        foreach($value as $val){
+            if(!$this->positiveInt($val)){
+                return false;
+            }
+        }
+        return true;
+    }
 }

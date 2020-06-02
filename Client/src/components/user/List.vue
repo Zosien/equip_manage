@@ -50,20 +50,22 @@
         <el-table-column label="操作" width="150">
           <template scope="scope">
             <div>
-              <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+              <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
               <el-button
                 size="mini"
                 type="danger"
-                @click="handleDisable(scope.row)"
+                @click="handleDisable([scope.row])"
                 v-if="scope.row.status === 1"
               >禁用</el-button>
-              <el-button size="mini" type="danger" @click="handleEnable(scope.row)" v-else>启用</el-button>
+              <el-button size="mini" type="danger" @click="handleEnable([scope.row])" v-else>启用</el-button>
             </div>
           </template>
         </el-table-column>
       </el-table>
       <div class="pos-rel p-t-20">
-        <!-- <btnGroup :selectedData="multipleSelection" :type="'users'"></btnGroup> -->
+        <el-button type="success" :disabled="clickAble">编辑</el-button>
+        <el-button type="primary" :disabled="clickAble" @click="handleEnable(selections)">启用</el-button>
+        <ElButton type="warning" :disabled="clickAble" @click="handleDisable(selections)">禁用</ElButton>
         <div class="block">
           <el-pagination
             @size-change="handleSizeChange"
@@ -114,13 +116,18 @@ export default {
       dataCount: null,
       loading: true,
       currentPage: null,
-      limit: 10
+      limit: 10,
+      selections: [],
+      clickAble: true
     }
   },
   created() {
     this.init()
   },
   methods: {
+    selectItem(item) {
+      this.selections = item
+    },
     init() {
       this.getCurrentPage()
       this.getKeyword()
@@ -198,38 +205,60 @@ export default {
     statusFilter(value, row) {
       return value === row.status + ''
     },
-    handleDisable(row) {
+    handleDisable(rowArr) {
+      var idArr = []
+      rowArr.forEach(element => {
+        idArr.push(element.id)
+      })
       this.$http
         .patch('/user', {
-          id: row.id,
+          id: idArr,
           status: 0
         })
         .then(res => {
-          row.status = 0
+          rowArr.forEach(element => {
+            element.status = 0
+          })
           this.$message.success('success')
         })
         .catch(err => {
           this.$message.error(err.data.msg)
         })
     },
-    handleEnable(row) {
+    handleEnable(rowArr) {
+      var idArr = []
+      rowArr.forEach(element => {
+        idArr.push(element.id)
+      })
       this.$http
         .patch('/user', {
-          id: row.id,
+          id: idArr,
           status: 1
         })
         .then(res => {
-          row.status = 1
+          rowArr.forEach(element => {
+            element.status = 1
+          })
           this.$message.success('success')
         })
         .catch(err => {
           this.$message.error(err.data.msg)
         })
+    },
+    handleEdit(row) {
+      this.$router.push('/user/edit/' + row.id)
     }
   },
   watch: {
     $route(to, from) {
       this.init()
+    },
+    selections() {
+      if (this.selections.length === 0) {
+        this.clickAble = true
+      } else {
+        this.clickAble = false
+      }
     }
   }
 }

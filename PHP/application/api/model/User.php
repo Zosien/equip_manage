@@ -55,7 +55,56 @@ class User extends Model
         $update = "update user set username = :username, psw = md5(:psw) where username = :stu_num;";
         $res = Db::execute($update,$user);
     }
-
+    /**
+     * 根据id查询详细信息,返回结果集
+     *
+     * @author lzx <1562248279@qq.com>
+     *
+     * @param int $id
+     *
+     * @return array
+     */
+    public static function getUser($id)
+    {
+        $sql = "select * from user_view u inner join user_info ui on u.id = ui.user_id where u.id = ? limit 1;";
+        $res = Db::query($sql,[$id])[0];
+        $res['psw'] = '';
+        unset($res['user_id']);
+        return $res;
+    }
+    public static function addEditAble($scope,$arr)
+    {
+        // var_dump($scope);
+        foreach($arr as $key => &$value)
+        {
+            $val = array('value'=>$value,'able'=>self::userEditAble($scope,$key));
+            $value = $val;
+        }
+        unset($value);
+        return $arr;
+    }
+    public static function userEditAble($scope,$value)
+    {
+        switch ($scope) {
+            case 1:
+                if($value === "username" || $value == "psw" || $value == "institute" || $value == "class" || $value == "name" || $value == "gender" || $value == "age")
+                    return true;
+                else
+                    return false;
+                break;
+            case 2:
+                if($value === "username" || $value == "psw" || $value === "rank" || $value === "status" || $value == "institute" || $value == "class")
+                    return true;
+                else
+                    return false;
+                break;
+            case 4:
+                return false;
+                break;
+            default:
+                break;
+        }
+    }
     /**
      * 获取指定权限能够查看的用户列表或者特定用户
      *
@@ -67,7 +116,7 @@ class User extends Model
      *
      * @return void
      */
-    public static function getUser($keyword, $scope,$page=1,$limit=20)
+    public static function getUsers($keyword, $scope,$page=1,$limit=20)
     {
         if ($keyword) {
             $data = self::where('username', 'LIKE', $keyword)->where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
@@ -91,13 +140,13 @@ class User extends Model
     /**
      * Undocumented function.
      *
-     * @param [int] $id
+     * @param array $id
      *
      * @return int(0,1)
      */
-    public static function modifyUser($id, $status)
+    public static function modifyUser($id=[], $status)
     {
-        $res = self::where('id', '=', $id)->update(['status' => $status]);
+        $res = self::where('id', 'in', $id)->update(['status' => $status]);
 
         return $res;
     }

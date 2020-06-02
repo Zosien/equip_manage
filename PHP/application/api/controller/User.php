@@ -2,6 +2,7 @@
 
 namespace app\api\controller;
 
+use app\api\model\Token;
 use app\api\model\User as UserModel;
 use app\api\validate\Modify;
 use app\lib\enum\ScopeEnum;
@@ -20,7 +21,7 @@ class User extends BaseController
      * @var array
      */
     protected $beforeActionList = [
-        'checkAdministratorScope' => ['only' => 'getUser,delUser,activeUser'],
+        'checkAdministratorScope' => ['only' => 'getUserByKey,getUserById,delUser,activeUser'],
     ];
     public function save()
     {
@@ -49,6 +50,13 @@ class User extends BaseController
             }
         }
     }
+    public function getUserById($id)
+    {
+        $scope = Token::getCurrentTokenVar('scope');
+        $res = UserModel::getUser($id);
+        $res = UserModel::addEditAble($scope,$res);
+        return $res;
+    }
     /**
      * Undocumented function.
      * TODO:
@@ -60,14 +68,14 @@ class User extends BaseController
      *
      * @return json 用户列表
      */
-    public function getUser()
+    public function getUserByKey()
     {
         (new PageValidator())->goCheck();
         $req = Request::instance();
         $page = $req->param('page');
         $limit = $req->param('limit');
         $keyword = $req->param('keyword');
-        $data = UserModel::getUser($keyword, ScopeEnum::Administrator,$page,$limit);
+        $data = UserModel::getUsers($keyword, ScopeEnum::Administrator,$page,$limit);
         
         return $data;
     }
@@ -87,15 +95,10 @@ class User extends BaseController
         $data = Request::instance()->patch();
         $status = $data['status'];
         $id = $data['id'];
-        $code = UserModel::modifyUser($id, $status);
-        if (1 === $code) {
-            $res = [
-                'msg' => 'success',
-            ];
-
-            return json($res, 201);
-        } else {
-            throw new RequestException();
-        }
+        UserModel::modifyUser($id, $status);
+        $res = [
+            'msg' => 'success',
+        ];
+        return json($res, 201);
     }
 }

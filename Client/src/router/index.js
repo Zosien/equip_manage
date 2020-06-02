@@ -5,6 +5,7 @@ import Home from '../components/Home.vue'
 import Welcome from '../components/Welcome.vue'
 import UserList from '../components/user/List.vue'
 import UserAdd from '../components/user/Add.vue'
+import UserEdit from '../components/user/Edit.vue'
 import Cookies from 'js-cookie'
 Vue.use(VueRouter)
 
@@ -28,6 +29,13 @@ const router = new VueRouter({
         {
           path: '/user/add',
           component: UserAdd,
+          meta: {
+            requireAuth: true
+          }
+        },
+        {
+          path: '/user/edit/:id',
+          component: UserEdit,
           meta: {
             requireAuth: true
           }

@@ -10,6 +10,13 @@ use app\lib\exception\TokenException;
 
 class BaseController extends Controller
 {
+    /**
+     * 检查管理员权限，高于管理员权限可调用
+     *
+     * @author lzx <1562248279@qq.com>
+     *
+     * @return true or Exception
+     */
     protected function checkAdministratorScope()
     {
         $scope = Token::getCurrentTokenVar('scope');
