@@ -8,6 +8,7 @@ use app\lib\enum\ScopeEnum;
 use app\lib\exception\RequestException;
 use think\Request;
 use app\api\model\UploadHandler as UploadModel;
+use app\api\validate\PageValidator;
 use app\api\validate\UserInfoValidate;
 use Exception;
 
@@ -55,14 +56,19 @@ class User extends BaseController
      *
      * @author lzx <1562248279@qq.com>
      *
-     * @param [string] $keyword
+     * @param string $keyword
      *
      * @return json 用户列表
      */
-    public function getUser($keyword = null)
+    public function getUser()
     {
-        $data = UserModel::getUser($keyword, ScopeEnum::Administrator);
-
+        (new PageValidator())->goCheck();
+        $req = Request::instance();
+        $page = $req->param('page');
+        $limit = $req->param('limit');
+        $keyword = $req->param('keyword');
+        $data = UserModel::getUser($keyword, ScopeEnum::Administrator,$page,$limit);
+        
         return $data;
     }
 

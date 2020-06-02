@@ -32,48 +32,46 @@ class BaseValidate extends Validate
         }
     }
 
-    public function instituteValidator($value,$rule = '',$data='',$field='')
+    public function instituteValidator($value, $rule = '', $data = '', $field = '')
     {
         $arr = ['信息学院', '化工学院', '机械学院', '文法学院'];
-        if(in_array($value,$arr)){
+        if (in_array($value, $arr)) {
             return true;
-        }
-        else
+        } else
             return false;
     }
-    public function stu_numValidator($value,$rule = '',$data='',$field='')
+    public function stu_numValidator($value, $rule = '', $data = '', $field = '')
     {
         $regx = '/^20((1[4-9])|(20))\d{6}$/';
-        $res = preg_match($regx,$value);
-        if($res)
+        $res = preg_match($regx, $value);
+        if ($res)
             return true;
         else
             return false;
     }
-    public function genderValidator($value,$rule='',$data='',$field='')
+    public function genderValidator($value, $rule = '', $data = '', $field = '')
     {
-        if($value == "" || $value == "男" || $value == "女")
+        if ($value == "" || $value == "男" || $value == "女")
             return true;
         else
             return false;
     }
 
-    public function ageValidator($value,$rule='',$data='',$field='')
+    public function ageValidator($value, $rule = '', $data = '', $field = '')
     {
-        if($value == "")
+        if ($value == "")
             return true;
-        else if(is_numeric($value) && $value >0 && $value < 110)
+        else if (is_numeric($value) && $value > 0 && $value < 110)
             return true;
         else
             return false;
     }
 
-    // public function positiveInt($value, $rule = '', $data = '', $field = '')
-    // {
-    //     if (0 === $value || 1 === $value) {
-    //         return true;
-    //     } else {
-    //         return false;
-    //     }
-    // }
+    public function positiveInt($value, $rule = '', $data = '', $field = '')
+    {
+        $value = $value-'0';
+        if (is_integer($value) && $value > 0) {
+            return true;
+        } else return false;
+    }
 }

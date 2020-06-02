@@ -56,15 +56,29 @@ class User extends Model
         $res = Db::execute($update,$user);
     }
 
-    public static function getUser($keyword, $scope)
+    /**
+     * 获取指定权限能够查看的用户列表或者特定用户
+     *
+     * @author lzx <1562248279@qq.com>
+     *
+     * @param string $keyword
+     * @param int $scope
+     * @param int $page
+     *
+     * @return void
+     */
+    public static function getUser($keyword, $scope,$page=1,$limit=20)
     {
         if ($keyword) {
-            $data = self::where('username', 'LIKE', $keyword)->where('scope', '<', $scope)->with('details')->select();
+            $data = self::where('username', 'LIKE', $keyword)->where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
+            $count = self::where('username', 'LIKE', $keyword)->where('scope', '<', $scope)->count('id');
         } else {
-            $data = self::where('scope', '<', $scope)->with('details')->select();
+            $data = self::where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
+            $count = self::where('scope', '<', $scope)->count('id');
         }
-
-        return $data;
+        $res['dataCount'] = $count;
+        $res['data'] = $data;
+        return $res;
     }
 
     public static function delUser($id)
