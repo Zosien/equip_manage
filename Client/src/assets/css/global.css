@@ -63,3 +63,9 @@ a {
 .w-200 {
   width: 200px !important;
 }
+.p-t-20 {
+  padding-top: 20px !important;
+}
+.pos-rel {
+  position: relative;
+}

@@ -128,11 +128,23 @@ export default {
         if (!valid) return
         this.data = JSON.parse(JSON.stringify(this.form))
         this.data.psw = _.$jse.encrypt(this.form.psw)
-        this.$http.post('user', this.data)
+        this.$http
+          .post('user', this.data)
+          .then(res => {
+            console.log(res.data)
+            if (res.data) {
+              this.$message.success(res.data.msg)
+              this.$router.push('/user/list')
+            }
+          })
+          .catch(err => {
+            this.$message.error(err.data.msg)
+          })
       })
     },
     handleSuccess(response, file, fileList) {
       this.$message.success('添加用户成功')
+      this.$router.push('/user/list')
     }
     // created() {
     //   this.getAllGroups()

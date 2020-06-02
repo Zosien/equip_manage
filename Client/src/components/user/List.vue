@@ -62,18 +62,18 @@
           </template>
         </el-table-column>
       </el-table>
-      <!-- <div class="pos-rel p-t-20">
-      <btnGroup :selectedData="multipleSelection" :type="'users'"></btnGroup>
-      <div class="block pages">
-        <el-pagination
-          @current-change="handleCurrentChange"
-          layout="prev, pager, next"
-          :page-size="limit"
-          :current-page="currentPage"
-          :total="dataCount"
-        ></el-pagination>
+      <div class="pos-rel p-t-20">
+        <!-- <btnGroup :selectedData="multipleSelection" :type="'users'"></btnGroup> -->
+        <div class="block pages">
+          <el-pagination
+            @current-change="handleCurrentChange"
+            layout="prev, pager, next"
+            :page-size="limit"
+            :current-page="currentPage"
+            :total="dataCount"
+          ></el-pagination>
+        </div>
       </div>
-      </div>-->
     </el-card>
   </div>
 </template>
@@ -109,34 +109,83 @@ export default {
       keyword: '',
       originalData: [],
       tableData: [],
-      loading: true
+      dataCount: null,
+      loading: true,
+      currentPage: null,
+      limit: 10
     }
   },
   created() {
-    this.getUserList()
+    this.init()
   },
   methods: {
+    init() {
+      this.getCurrentPage()
+      this.getKeyword()
+      this.getUserList()
+    },
+    search() {
+      this.$router.push({
+        path: this.$route.path,
+        query: { keyword: this.keyword, page: 1 }
+      })
+    },
+    handleCurrentChange(page) {
+      this.$router.push({
+        path: this.$route.path,
+        query: { keyword: this.keyword, page: page }
+      })
+    },
+    getKeyword() {
+      const data = this.$route
+      if (data) {
+        if (data.query.keyword) {
+          this.keyword = data.query.keyword
+        } else {
+          this.keyword = ''
+        }
+      }
+    },
+    getCurrentPage() {
+      const data = this.$route
+      if (data) {
+        if (data.query.page) {
+          this.currentPage = parseInt(data.query.page)
+        } else {
+          this.currentPage = 1
+        }
+      }
+    },
     async getUserList() {
       this.loading = true
+      const data = {
+        params: {
+          keyword: this.keyword,
+          page: this.currentPage,
+          limit: this.limit
+        }
+      }
       await this.$http
-        .get('/user')
+        .get('/user', data)
         .then(res => {
           this.originalData = res.data
-          this.tableData = res.data
+          this.tableData = res.data.data
+          this.dataCount = res.data.dataCount
         })
         .catch(err => {
           this.$message.error(err.data.msg)
         })
       this.loading = false
     },
-    search() {
-      var _this = this
-      this.tableData = this.originalData.filter(function(data) {
-        return (
-          data.username.toLowerCase().indexOf(_this.keyword.toLowerCase()) > -1
-        )
-      })
-    },
+    // 在本地列表中search，分页则不适用
+    // search() {
+    //   var _this = this
+    //   this.tableData = this.originalData.filter(function(data) {
+    //     return (
+    //       data.username.toLowerCase().indexOf(_this.keyword.toLowerCase()) > -1
+    //     )
+    //   })
+    // },
     rankFilter(value, row) {
       return value === row.rank
     },
@@ -170,6 +219,11 @@ export default {
         .catch(err => {
           this.$message.error(err.data.msg)
         })
+    }
+  },
+  watch: {
+    $route(to, from) {
+      this.init()
     }
   }
 }

@@ -38,7 +38,7 @@ export default {
     }
   },
   mounted() {
-    console.log(this.$router.path)
+    console.log(this.$route.path)
   },
   methods: {
     logout() {
