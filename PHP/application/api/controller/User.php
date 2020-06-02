@@ -9,6 +9,7 @@ use app\lib\exception\RequestException;
 use think\Request;
 use app\api\model\UploadHandler as UploadModel;
 use app\api\validate\UserInfoValidate;
+use Exception;
 
 class User extends BaseController
 {
@@ -24,8 +25,8 @@ class User extends BaseController
     {
         (new UserInfoValidate())->goCheck();
         
-        $res = UserModel::newUserInfo();
-        var_dump($res);
+        UserModel::newUserInfo();
+        return json(['msg'=>"插入成功"]);
     }
     /**
      * 批量添加用户文件处理

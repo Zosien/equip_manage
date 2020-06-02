@@ -44,17 +44,16 @@ class User extends Model
                 $val = null;
             }
         }
-        var_dump($param);
         $info = array_slice($param,2);
         $user = array_slice($param,0,2);
+        $user['stu_num'] = $info['stu_num'];
         $insert = "insert into user_info(institute,class,name,stu_num,gender,age) values (:institute,:class,:name,:stu_num,:gender,:age);";
         $res = Db::execute($insert,$info);
         if(!$res){
-            throw new Exception();
+            throw new Exception("插入失败");
         }
-        $update = "update user set username = :username and psw = md5(:psw);";
+        $update = "update user set username = :username, psw = md5(:psw) where username = :stu_num;";
         $res = Db::execute($update,$user);
-        return $res;
     }
 
     public static function getUser($keyword, $scope)
