@@ -64,12 +64,14 @@
       </el-table>
       <div class="pos-rel p-t-20">
         <!-- <btnGroup :selectedData="multipleSelection" :type="'users'"></btnGroup> -->
-        <div class="block pages">
+        <div class="block">
           <el-pagination
+            @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            layout="prev, pager, next"
-            :page-size="limit"
             :current-page="currentPage"
+            :page-sizes="[5, 10, 20, 30]"
+            :page-size="limit"
+            layout="->,total, sizes, prev, pager, next, jumper"
             :total="dataCount"
           ></el-pagination>
         </div>
@@ -123,6 +125,10 @@ export default {
       this.getCurrentPage()
       this.getKeyword()
       this.getUserList()
+    },
+    handleSizeChange(val) {
+      this.limit = val
+      this.init()
     },
     search() {
       this.$router.push({
