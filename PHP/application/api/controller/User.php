@@ -2,6 +2,7 @@
 
 namespace app\api\controller;
 
+use app\admin\model\User as ModelUser;
 use app\api\model\Token;
 use app\api\model\User as UserModel;
 use app\api\validate\Modify;
@@ -50,6 +51,15 @@ class User extends BaseController
             }
         }
     }
+    /**
+     * 根据id获取用户信息
+     *
+     * @author lzx <1562248279@qq.com>
+     *
+     * @param int $id
+     *
+     * @return void
+     */
     public function getUserById($id)
     {
         $scope = Token::getCurrentTokenVar('scope');
@@ -80,6 +90,17 @@ class User extends BaseController
         return $data;
     }
 
+    public function modifyInfo($id)
+    {
+        $req = Request::instance();
+        $options = $req->param();
+        unset($options['id']);
+        // 前端已经做过处理
+        $res = UserModel::modify($id,$options);
+        // $options = array_filter($options);
+        // $res = UserModel::modifyUserByID($id,$options);
+        return $res;
+    }
     /**
      * Undocumented function.
      *
@@ -89,13 +110,13 @@ class User extends BaseController
      *
      * @return void
      */
-    public function modify()
+    public function modifyStatus()
     {
         (new Modify())->goCheck();
         $data = Request::instance()->patch();
-        $status = $data['status'];
+        $status = ['status'=>$data['status']];
         $id = $data['id'];
-        UserModel::modifyUser($id, $status);
+        UserModel::modifyUserByID($id, $status);
         $res = [
             'msg' => 'success',
         ];

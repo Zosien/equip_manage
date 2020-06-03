@@ -51,7 +51,7 @@ axios.interceptors.response.use(response => {
   if (err.response) {
     if (err.response.status === 401) {
       localStorage.removeItem('token')
-      router.push('/login')
+      router.push({ path: '/login', query: { redirect: router.currentRoute.fullPath } })
     }
   }
   return Promise.reject(err.response)

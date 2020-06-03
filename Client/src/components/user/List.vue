@@ -13,7 +13,13 @@
           </router-link>
         </el-col>
         <el-col :span="4">
-          <el-input placeholder="请输入用户名" v-model="keyword" @keyup.enter.native="search()">
+          <el-input
+            placeholder="请输入用户名"
+            v-model="keyword"
+            @keyup.enter.native="search()"
+            clearable
+            @clear="getUserList"
+          >
             <el-button slot="append" icon="el-icon-search" @click="search()"></el-button>
           </el-input>
         </el-col>
@@ -34,12 +40,12 @@
           :filters="[{ text: 'student', value: 'student' }, { text: 'teacher', value: 'teacher' },{ text: 'engineer', value: 'engineer' }]"
           :filter-method="rankFilter"
         ></el-table-column>
-        <el-table-column label="学号" prop="details.stu_num"></el-table-column>
-        <el-table-column label="学院" prop="details.institute"></el-table-column>
-        <el-table-column label="班级" prop="details.class"></el-table-column>
-        <el-table-column label="姓名" prop="details.name"></el-table-column>
-        <el-table-column label="性别" prop="details.gender"></el-table-column>
-        <el-table-column label="年龄" prop="details.age"></el-table-column>
+        <el-table-column label="学号" prop="stu_num"></el-table-column>
+        <el-table-column label="学院" prop="institute"></el-table-column>
+        <el-table-column label="班级" prop="class"></el-table-column>
+        <el-table-column label="姓名" prop="name"></el-table-column>
+        <el-table-column label="性别" prop="gender"></el-table-column>
+        <el-table-column label="年龄" prop="age"></el-table-column>
         <el-table-column
           label="状态"
           prop="status"
@@ -63,7 +69,7 @@
         </el-table-column>
       </el-table>
       <div class="pos-rel p-t-20">
-        <el-button type="success" :disabled="clickAble">编辑</el-button>
+        <el-button type="success" :disabled="clickAble" @click="handleBatchEdit">编辑</el-button>
         <el-button type="primary" :disabled="clickAble" @click="handleEnable(selections)">启用</el-button>
         <ElButton type="warning" :disabled="clickAble" @click="handleDisable(selections)">禁用</ElButton>
         <div class="block">
@@ -79,6 +85,67 @@
         </div>
       </div>
     </el-card>
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisible">
+      <el-form ref="editForm" :model="editForm" :rules="rules" label-width="130px">
+        <el-form-item label="用户名" prop="username">
+          <el-input
+            v-model.trim="editForm.username"
+            :disabled="!disable.username"
+            class="h-40 w-200"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="psw">
+          <el-input
+            v-model.trim="editForm.psw"
+            :disabled="!disable.psw"
+            class="h-40 w-200"
+            type="password"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="学院" prop="institute">
+          <el-select
+            v-model="editForm.institute"
+            :disabled="!disable.institute"
+            placeholder="请选择学院"
+            class="w-200"
+          >
+            <el-option v-for="item in institutes" :key="item.index" :label="item" :value="item"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="班级" prop="class">
+          <el-input v-model.trim="editForm.class" :disabled="!disable.class" class="h-40 w-200"></el-input>
+        </el-form-item>
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model.trim="editForm.name" :disabled="!disable.name" class="h-40 w-200"></el-input>
+        </el-form-item>
+        <el-form-item label="学号" prop="stu_num">
+          <el-input v-model.trim="editForm.stu_num" :disabled="!disable.stu_num" class="h-40 w-200"></el-input>
+        </el-form-item>
+        <el-form-item label="性别" prop="gender">
+          <el-select
+            v-model="editForm.gender"
+            :disabled="!disable.gender"
+            placeholder="请输入性别"
+            class="h-40 w-200"
+          >
+            <el-option label="男" value="男"></el-option>
+            <el-option label="女" value="女"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="年龄" prop="age">
+          <el-input v-model.number="editForm.age" :disabled="!disable.age" class="h-40 w-200"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="handleSubmit"
+          :loading="submitLoading"
+          :disabled="submit"
+        >确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <style lang="less" scoped>
@@ -109,65 +176,91 @@
 <script>
 export default {
   data() {
+    var validatePsw = (rule, value, callback) => {
+      if ((value.length !== 0 && value.length <= 6) || value.length >= 16) {
+        return callback(new Error('密码为6-16位'))
+      }
+      callback()
+    }
     return {
       keyword: '',
       originalData: [],
       tableData: [],
       dataCount: null,
       loading: true,
-      currentPage: null,
+      submitLoading: false,
+      currentPage: 1,
       limit: 10,
       selections: [],
-      clickAble: true
+      clickAble: true,
+      institutes: ['信息学院', '化工学院', '机械学院', '文法学院'],
+      dialogFormVisible: false,
+      disable: {
+        username: true,
+        psw: true,
+        institute: true,
+        class: true,
+        name: false,
+        stu_num: false,
+        gender: false,
+        age: false
+      },
+      editForm: {
+        id: null,
+        username: '',
+        psw: '',
+        institute: '',
+        class: '',
+        name: '',
+        stu_num: null,
+        gender: '',
+        age: null
+      },
+      backup: {
+        id: null,
+        username: '',
+        psw: '',
+        institute: '',
+        class: '',
+        name: '',
+        stu_num: null,
+        gender: '',
+        age: null
+      },
+      row: {},
+      rules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 3, max: 10, message: '用户名长度为3-10位', trigger: 'blur' }
+        ],
+        psw: [{ validator: validatePsw, trigger: 'blur' }],
+        institute: [{ required: true, message: '请输入学院' }],
+        class: [{ required: true, message: '请输入班级' }]
+      }
     }
   },
   created() {
-    this.init()
+    this.getUserList()
   },
   methods: {
     selectItem(item) {
       this.selections = item
     },
-    init() {
-      this.getCurrentPage()
-      this.getKeyword()
-      this.getUserList()
-    },
+    // init() {
+    //   this.getCurrentPage()
+    //   this.getKeyword()
+    //   this.getUserList()
+    // },
     handleSizeChange(val) {
       this.limit = val
-      this.init()
+      this.getUserList()
     },
     search() {
-      this.$router.push({
-        path: this.$route.path,
-        query: { keyword: this.keyword, page: 1 }
-      })
+      this.getUserList()
     },
     handleCurrentChange(page) {
-      this.$router.push({
-        path: this.$route.path,
-        query: { keyword: this.keyword, page: page }
-      })
-    },
-    getKeyword() {
-      const data = this.$route
-      if (data) {
-        if (data.query.keyword) {
-          this.keyword = data.query.keyword
-        } else {
-          this.keyword = ''
-        }
-      }
-    },
-    getCurrentPage() {
-      const data = this.$route
-      if (data) {
-        if (data.query.page) {
-          this.currentPage = parseInt(data.query.page)
-        } else {
-          this.currentPage = 1
-        }
-      }
+      this.currentPage = page
+      this.getUserList()
     },
     async getUserList() {
       this.loading = true
@@ -246,7 +339,53 @@ export default {
         })
     },
     handleEdit(row) {
-      this.$router.push('/user/edit/' + row.id)
+      this.row = row
+      this.backup.id = this.editForm.id = row.id
+      this.backup.username = this.editForm.username = row.username
+      this.backup.institute = this.editForm.institute = row.institute
+      this.backup.class = this.editForm.class = row.class
+      this.backup.name = this.editForm.name = row.name
+      this.backup.stu_num = this.editForm.stu_num = row.stu_num
+      this.backup.gender = this.editForm.gender = row.gender
+      this.backup.age = this.editForm.age = row.age
+      this.dialogFormVisible = true
+    },
+    handleBatchEdit() {},
+    async handleSubmit() {
+      this.$refs.editForm.validate(valid => {
+        if (!valid) return
+        this.submitLoading = true
+        var data = {}
+        var id = this.backup.id
+        // 只发送给后端修改过的数据
+        for (var key in this.backup) {
+          if (this.backup[key] !== this.editForm[key]) {
+            data[key] = this.editForm[key]
+          }
+        }
+        this.$http
+          .patch('user/' + id, data)
+          .then(res => {
+            for (var key in data) {
+              this.row[key] = data[key]
+            }
+            this.$message.success('编辑成功')
+            this.submitLoading = false
+
+            this.dialogFormVisible = false
+          })
+          .catch(err => {
+            console.log(err)
+            this.submitLoading = false
+
+            this.dialogFormVisible = false
+          })
+      })
+    }
+  },
+  computed: {
+    submit: function() {
+      return JSON.stringify(this.editForm) === JSON.stringify(this.backup)
     }
   },
   watch: {

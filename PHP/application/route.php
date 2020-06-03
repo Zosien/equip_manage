@@ -21,7 +21,8 @@ Route::get('api/user/:id', 'api/User/getUserById',[],['id'=>'\d+']);
 Route::get('api/user/:keyword', 'api/User/getUserByKey',[],['keyword'=>'\w+']);
 Route::get('api/user', 'api/User/getUserByKey');
 Route::delete('api/user', 'api/User/delUser');
-Route::patch('api/user', 'api/User/modify');
+Route::patch('api/user/:id','api/User/modifyInfo',['id'=>'\d+']);
+Route::patch('api/user', 'api/User/modifyStatus');
 Route::post('api/user/upload','api/User/upload');
 Route::post('api/user','api/User/save');
 

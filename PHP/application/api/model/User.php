@@ -2,6 +2,7 @@
 
 namespace app\api\model;
 
+use app\api\validate\Keyword;
 use app\lib\exception\ParameterException;
 use app\lib\exception\UserException;
 use app\lib\RSADecrypt;
@@ -14,7 +15,7 @@ class User extends Model
 {
     protected $hidden = ['create_time', 'update_time', 'scope', 'psw', 'user_id'];
 
-    public function details()
+    public function detail()
     {
         return $this->hasOne('UserInfo', 'user_id', 'id');
     }
@@ -28,6 +29,14 @@ class User extends Model
 
         return $user->id;
     }
+    /**
+     * Undocumented function
+     * TODO:
+     * 事务，一个表插入失败则回滚
+     * @author lzx <1562248279@qq.com>
+     *
+     * @return void
+     */
     public static function newUserInfo()
     {
         $rsa = new RSADecrypt();
@@ -46,14 +55,18 @@ class User extends Model
         }
         $info = array_slice($param,2);
         $user = array_slice($param,0,2);
-        $user['stu_num'] = $info['stu_num'];
         $insert = "insert into user_info(institute,class,name,stu_num,gender,age) values (:institute,:class,:name,:stu_num,:gender,:age);";
         $res = Db::execute($insert,$info);
         if(!$res){
             throw new Exception("插入失败");
         }
-        $update = "update user set username = :username, psw = md5(:psw) where username = :stu_num;";
-        $res = Db::execute($update,$user);
+        $sql = "select id from user where username=? and psw = md5(?)";
+        $id = Db::query($sql,[$info['stu_num'],$info['stu_num']])[0]['id'];
+        $res = self::modifyUserByID($id,$user);
+        return $res;
+        // var_dump($res);
+        // $update = "update user set username = :username, psw = md5(:psw) where username = :stu_num;";
+        // $res = Db::execute($update,$user);
     }
     /**
      * 根据id查询详细信息,返回结果集
@@ -66,7 +79,7 @@ class User extends Model
      */
     public static function getUser($id)
     {
-        $sql = "select * from user_view u inner join user_info ui on u.id = ui.user_id where u.id = ? limit 1;";
+        $sql = "select * from user_view u left join user_info ui on u.id = ui.user_id where u.id = ? limit 1;";
         $res = Db::query($sql,[$id])[0];
         $res['psw'] = '';
         unset($res['user_id']);
@@ -119,12 +132,17 @@ class User extends Model
     public static function getUsers($keyword, $scope,$page=1,$limit=20)
     {
         if ($keyword) {
-            $data = self::where('username', 'LIKE', $keyword)->where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
-            $count = self::where('username', 'LIKE', $keyword)->where('scope', '<', $scope)->count('id');
+            $dataSql = "select * from user u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope." and u.username like '%".$keyword."%' limit ".$limit." offset ".($page-1)*$limit.";";
+            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope." and u.username like '%".$keyword."%';";
+            // $data = self::where('username', 'LIKE', "%$keyword%")->where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
+            // $count = self::where('username', 'LIKE', "%$keyword%")->where('scope', '<', $scope)->count('id');
         } else {
-            $data = self::where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
-            $count = self::where('scope', '<', $scope)->count('id');
+            $dataSql = "select * from user_view u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope." limit ".$limit." offset ".($page-1)*$limit.";";
+            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope;
         }
+        $data = Db::query($dataSql);
+            //数据绑定有数字变字符串的问题
+        $count = Db::query($countSql)[0]['count'];
         $res['dataCount'] = $count;
         $res['data'] = $data;
         return $res;
@@ -136,17 +154,43 @@ class User extends Model
 
         return $res;
     }
-
+    public static function modify($id,$options=[])
+    {
+        $user = [];
+        $info = [];
+        foreach ($options as $key => $value) {
+            if($key == 'username' || $key == 'psw'){
+                $user[$key] = $value;
+            }else{
+                $info[$key] = $value;
+            }
+        }
+        if(sizeof($user)){
+            self::modifyUserByID($id,$user);
+        }
+        if(sizeof($info)){
+            // self::table('user_info')->where('id','=',$id)->count()
+            self::modifyUserInfoByID($id,$info);
+        }
+        return self::getUser($id);
+    }
     /**
-     * Undocumented function.
+     * 根据id修改信息
      *
      * @param array $id
+     * @param array $option
      *
      * @return int(0,1)
      */
-    public static function modifyUser($id=[], $status)
+    public static function modifyUserByID($id=[], $options)
     {
-        $res = self::where('id', 'in', $id)->update(['status' => $status]);
+        $res = self::where('id', 'in', $id)->update($options);
+
+        return $res;
+    }
+    public static function modifyUserInfoByID($id=[], $options)
+    {
+        $res = self::table('user_info')->where('user_id', 'in', $id)->update($options);
 
         return $res;
     }

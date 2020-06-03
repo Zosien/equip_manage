@@ -10,7 +10,7 @@
         <el-form-item label="用户名" prop="username">
           <el-input
             v-model.trim="formData.username"
-            :disabled="!form.username.able"
+            v-bind:disabled="!form.username.able"
             class="h-40 w-200"
           ></el-input>
         </el-form-item>
@@ -60,7 +60,7 @@
           <el-input v-model.number="formData.age" :disabled="!form.age.able" class="h-40 w-200"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :disabled="!submit" @click="add()">提交</el-button>
+          <el-button type="primary" :disabled="submit" @click="add()">提交</el-button>
           <el-button @click="$base.goBack()">返回</el-button>
         </el-form-item>
       </el-form>
@@ -75,6 +75,12 @@
 <script>
 export default {
   data() {
+    var validatePsw = (rule, value, callback) => {
+      if ((value.length !== 0 && value.length <= 6) || value.length >= 16) {
+        return callback(new Error('密码为6-16位'))
+      }
+      callback()
+    }
     return {
       id: null,
       formData: {
@@ -83,46 +89,61 @@ export default {
         institute: '',
         class: '',
         name: '',
+        stu_num: null,
+        gender: '',
+        age: null
+      },
+      backup: {
+        username: '',
+        psw: '',
+        institute: '',
+        class: '',
+        name: '',
+        stu_num: null,
         gender: '',
         age: null
       },
       form: {},
-      submit: false,
       institutes: ['信息学院', '化工学院', '机械学院', '文法学院'],
       rules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
           { min: 3, max: 10, message: '用户名长度为3-10位', trigger: 'blur' }
         ],
-        psw: [
-          { required: true, message: '请输入用户密码', trigger: 'blur' },
-          { min: 6, max: 16, message: '密码长度为6-16位', trigger: 'blur' }
-        ],
+        psw: [{ validator: validatePsw, trigger: 'blur' }],
         institute: [{ required: true, message: '请输入学院' }],
         class: [{ required: true, message: '请输入班级' }]
-        // stu_num: [
-        //   { required: true, message: '请输入学号' },
-        //   { validator: validateStuNum, trigger: 'blur' }
-        // ]
-        // age: [{ type: 'number', message: '年龄必须为数字值' }]
       }
     }
   },
   methods: {
     add() {
-      const arr = []
-
-      console.log(arr)
+      var {
+        name,
+        gender,
+        // eslint-disable-next-line camelcase
+        stu_num,
+        age,
+        ...data
+      } = this.formData
+      this.$http
+        .patch('user/' + this.id, data)
+        .then(res => {
+          console.log(res)
+        })
+        .catch(err => {
+          console.log(err)
+        })
     },
     async getData() {
       this.$http
         .get('user/' + this.id)
         .then(res => {
           this.form = res.data
-          for (var key in this.form) {
+          for (var key in this.formData) {
             this.formData[key] = this.form[key].value
+            this.backup[key] = this.form[key].value
           }
-          this.submit = false
         })
         .catch(err => {
           console.log(err)
@@ -133,14 +154,27 @@ export default {
     this.id = this.$route.params.id
     this.getData()
   },
-  watch: {
-    formData: {
-      handler(newValue, oldValue) {
-        console.log(newValue)
-        this.submit = true
-      },
-      deep: true
+  computed: {
+    submit: function() {
+      return JSON.stringify(this.formData) === JSON.stringify(this.backup)
     }
+  },
+  watch: {
+    change: function(val, oldVal) {
+      console.log('y')
+    }
+    // 'formData.username': function(val, oldVal) {
+    //   console.log(val)
+    // },
+    // 'formData.psw': function(val, oldVal) {
+    //   console.log(val)
+    // },
+    // 'formData.institute': function(val, oldVal) {
+    //   console.log(val)
+    // },
+    // 'formData.class': function(val, oldVal) {
+    //   console.log(val)
+    // }
   }
 }
 </script>
