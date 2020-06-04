@@ -5,3 +5,12 @@
 5. token刷新
 6. 分页
 7. 修改user_view视图，删除scope
+
+纵向居中
+
+```css
+display: flax;
+align-items: center;
+```
+
+![image-20200604163200854](C:\Users\15622\AppData\Roaming\Typora\typora-user-images\image-20200604163200854.png)

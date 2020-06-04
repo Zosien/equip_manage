@@ -83,4 +83,13 @@ class BaseValidate extends Validate
         }
         return true;
     }
+    public function priceValidator($value, $rule = '', $data = '', $field = '')
+    {
+        $regx =  '/^\d+(\.(\d){1,2})?$/';
+        $res = preg_match($regx,$value);
+        if($res)
+            return true;
+        else
+            return false;
+    }
 }

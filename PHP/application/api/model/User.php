@@ -33,7 +33,6 @@ class User extends Model
      * Undocumented function
      * TODO:
      * 事务，一个表插入失败则回滚
-     * @author lzx <1562248279@qq.com>
      *
      * @return void
      */
@@ -48,11 +47,7 @@ class User extends Model
             throw new ParameterException();
         }
         $param['psw'] = $psw;
-        foreach($param as $key => &$val){
-            if(empty($val) && $val !== 0){
-                $val = null;
-            }
-        }
+        changeEmptyToNull($param);
         $info = array_slice($param,2);
         $user = array_slice($param,0,2);
         $insert = "insert into user_info(institute,class,name,stu_num,gender,age) values (:institute,:class,:name,:stu_num,:gender,:age);";
@@ -132,13 +127,13 @@ class User extends Model
     public static function getUsers($keyword, $scope,$page=1,$limit=20)
     {
         if ($keyword) {
-            $dataSql = "select * from user u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope." and u.username like '%".$keyword."%' limit ".$limit." offset ".($page-1)*$limit.";";
-            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope." and u.username like '%".$keyword."%';";
+            $dataSql = "select * from user u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope." and u.username like '%".$keyword."%' limit ".$limit." offset ".($page-1)*$limit.";";
+            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope." and u.username like '%".$keyword."%';";
             // $data = self::where('username', 'LIKE', "%$keyword%")->where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
             // $count = self::where('username', 'LIKE', "%$keyword%")->where('scope', '<', $scope)->count('id');
         } else {
-            $dataSql = "select * from user_view u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope." limit ".$limit." offset ".($page-1)*$limit.";";
-            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.scope < ".$scope;
+            $dataSql = "select * from user_view u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope." limit ".$limit." offset ".($page-1)*$limit.";";
+            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope;
         }
         $data = Db::query($dataSql);
             //数据绑定有数字变字符串的问题
@@ -150,7 +145,7 @@ class User extends Model
 
     public static function delUser($id)
     {
-        $res = self::where('id', '=', $id)->update(['status' => 0]);
+        $res = self::where('id', 'in', $id)->update(['status' => -1]);
 
         return $res;
     }

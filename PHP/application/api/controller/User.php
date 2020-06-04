@@ -2,12 +2,10 @@
 
 namespace app\api\controller;
 
-use app\admin\model\User as ModelUser;
 use app\api\model\Token;
 use app\api\model\User as UserModel;
 use app\api\validate\Modify;
 use app\lib\enum\ScopeEnum;
-use app\lib\exception\RequestException;
 use think\Request;
 use app\api\model\UploadHandler as UploadModel;
 use app\api\validate\PageValidator;
@@ -22,8 +20,15 @@ class User extends BaseController
      * @var array
      */
     protected $beforeActionList = [
-        'checkAdministratorScope' => ['only' => 'getUserByKey,getUserById,delUser,activeUser'],
+        'checkAdministratorScope' => ['only' => 'getUserByKey,getUserById,delUser,activeUser,save,upload'],
     ];
+    public function delUser()
+    {
+        $req = Request::instance();
+        $id = $req->param();
+        $res = UserModel::delUser($id);
+        return json(['data'=>$res]);
+    }
     public function save()
     {
         (new UserInfoValidate())->goCheck();
@@ -44,9 +49,9 @@ class User extends BaseController
         $path = ROOT_PATH . 'runtime' . DS . 'uploads'. DS;
         if($file){
             $name = $path;
-            $name .= UploadModel::save($path,$file);
+            $name .= saveFile($path,$file);
             if($name){
-                $res = UploadModel::handler($name);
+                $res = UploadModel::userHandler($name);
                 return json($res);
             }
         }
@@ -95,7 +100,7 @@ class User extends BaseController
         $req = Request::instance();
         $options = $req->param();
         unset($options['id']);
-        // 前端已经做过处理
+        // ��端已经做过处理
         $res = UserModel::modify($id,$options);
         // $options = array_filter($options);
         // $res = UserModel::modifyUserByID($id,$options);

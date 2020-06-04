@@ -83,14 +83,14 @@ export default {
       isLoading: false,
       activeName: 'first',
       form: {
-        username: '2017040353',
-        psw: '2017040353',
-        institute: '信息学院',
-        class: '计科1704',
-        name: '李泽祥',
-        stu_num: '2017040353',
-        gender: '男',
-        age: 24
+        username: '',
+        psw: '',
+        institute: '',
+        class: '',
+        name: '',
+        stu_num: '',
+        gender: '',
+        age: null
       },
       data: {},
       orgsOptions: [],
@@ -126,7 +126,7 @@ export default {
       var _ = this
       this.$refs.addForm.validate(valid => {
         if (!valid) return
-        this.data = JSON.parse(JSON.stringify(this.form))
+        this.data = JSON.parse(JSON.stringify(this.form)) // 实现深拷贝
         this.data.psw = _.$jse.encrypt(this.form.psw)
         this.$http
           .post('user', this.data)

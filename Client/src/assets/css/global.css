@@ -75,3 +75,6 @@ a {
 .el-dialog {
   margin: 20px auto !important;
 }
+.el-breadcrumb {
+  margin-bottom: 15px;
+}

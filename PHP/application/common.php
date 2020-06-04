@@ -23,3 +23,20 @@ function getRandomChar($length)
 
     return $str;
 }
+function saveFile($path,$file)
+{
+    $info = $file->move($path);
+    if($info){
+        return $info->getSaveName();
+    }else{
+        throw new Exception($file->getError(),500);
+    }
+}
+function changeEmptyToNull(&$array=[])
+{
+    foreach($array as $key => &$val){
+        if(empty($val) && $val !== 0){
+            $val = null;
+        }
+    }
+}

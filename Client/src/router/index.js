@@ -6,6 +6,11 @@ import Welcome from '../components/Welcome.vue'
 import UserList from '../components/user/List.vue'
 import UserAdd from '../components/user/Add.vue'
 import UserEdit from '../components/user/Edit.vue'
+import Rights from '../components/power/Rights'
+import Report from '../components/report/Report'
+import Equip from '../components/equip/List'
+import EquipAdd from '../components/equip/Add'
+
 import Cookies from 'js-cookie'
 Vue.use(VueRouter)
 
@@ -36,6 +41,34 @@ const router = new VueRouter({
         {
           path: '/user/edit/:id',
           component: UserEdit,
+          meta: {
+            requireAuth: true
+          }
+        },
+        {
+          path: '/rights',
+          component: Rights,
+          meta: {
+            requireAuth: true
+          }
+        },
+        {
+          path: '/report',
+          component: Report,
+          meta: {
+            requireAuth: true
+          }
+        },
+        {
+          path: '/equip/list',
+          component: Equip,
+          meta: {
+            requireAuth: true
+          }
+        },
+        {
+          path: '/equip/add',
+          component: EquipAdd,
           meta: {
             requireAuth: true
           }

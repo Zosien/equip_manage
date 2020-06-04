@@ -9,18 +9,26 @@
       {{current}}
     </el-header>
     <el-container>
-      <el-aside width="200px">
+      <el-aside width="180px">
         <el-menu
-          width="200px"
+          width="180px"
           background-color="#333744"
           text-color="#fff"
           active-text-color="#ffd04b"
           router
-          default-active="/user/list"
+          :default-active="currentUrl"
         >
           <el-menu-item-group>
             <template slot="title">用户管理</template>
             <el-menu-item index="/user/list">用户列表</el-menu-item>
+          </el-menu-item-group>
+          <el-menu-item-group>
+            <template slot="title">数据统计</template>
+            <el-menu-item index="/report">用户报表</el-menu-item>
+          </el-menu-item-group>
+          <el-menu-item-group>
+            <template slot="title">设备管理</template>
+            <el-menu-item index="/equip/list">设备列表</el-menu-item>
           </el-menu-item-group>
         </el-menu>
       </el-aside>
@@ -34,11 +42,17 @@
 export default {
   data() {
     return {
-      current: ''
+      current: '',
+      currentUrl: ''
     }
   },
   mounted() {
     console.log(this.$route.path)
+  },
+  watch: {
+    $router() {
+      this.currentUrl = this.$route.path
+    }
   },
   methods: {
     logout() {

@@ -17,9 +17,11 @@ class BaseController extends Controller
      *
      * @return true or Exception
      */
+    protected $scope = '';
     protected function checkAdministratorScope()
     {
         $scope = Token::getCurrentTokenVar('scope');
+        $this->scope = $scope;
         if ($scope) {
             if ($scope >= ScopeEnum::Administrator) {
                 return true;

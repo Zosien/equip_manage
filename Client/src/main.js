@@ -8,10 +8,13 @@ import axios from 'axios'
 import JSEncrypt from 'jsencrypt'
 import common from './assets/js/common.js'
 import Cookies from 'js-cookie'
+import Nprogress from 'nprogress'
+import 'nprogress/nprogress.css'
 axios.defaults.baseURL = 'http://db.com/api'
 
 var isTokenRefreshing = false // 刷新token的请求不拦截
 axios.interceptors.request.use(config => {
+  Nprogress.start()
   config.headers.Authorization = Cookies.get('token')
   var exp = window.sessionStorage.getItem('exp')
   var time = (new Date()).getTime()
@@ -46,6 +49,7 @@ axios.interceptors.request.use(config => {
 })
 
 axios.interceptors.response.use(response => {
+  Nprogress.done()
   return response
 }, err => {
   if (err.response) {

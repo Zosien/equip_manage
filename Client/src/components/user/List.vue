@@ -52,26 +52,33 @@
           width="100"
           :filters="[{ text: '-1', value: '-1' }, { text: '0', value: '0' },{ text: '1', value: '1' }]"
           :filter-method="statusFilter"
-        ></el-table-column>
+        >
+          <template scope="scope">
+            <div>
+              <el-switch
+                v-model="scope.row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleChange($event,scope.row)"
+              ></el-switch>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="150">
           <template scope="scope">
             <div>
               <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
-              <el-button
-                size="mini"
-                type="danger"
-                @click="handleDisable([scope.row])"
-                v-if="scope.row.status === 1"
-              >禁用</el-button>
-              <el-button size="mini" type="danger" @click="handleEnable([scope.row])" v-else>启用</el-button>
+              <el-button size="mini" type="danger" @click="handleDel([scope.row])">删除</el-button>
             </div>
           </template>
         </el-table-column>
       </el-table>
       <div class="pos-rel p-t-20">
-        <el-button type="success" :disabled="clickAble" @click="handleBatchEdit">编辑</el-button>
+        <el-button type="success" :disabled="clickAble" @click="handleEdit(selections)">编辑</el-button>
         <el-button type="primary" :disabled="clickAble" @click="handleEnable(selections)">启用</el-button>
         <ElButton type="warning" :disabled="clickAble" @click="handleDisable(selections)">禁用</ElButton>
+        <ElButton type="danger" :disabled="clickAble" @click="handleDel(selections)">删除</ElButton>
+
         <div class="block">
           <el-pagination
             @size-change="handleSizeChange"
@@ -85,19 +92,20 @@
         </div>
       </div>
     </el-card>
-    <el-dialog title="编辑用户" :visible.sync="dialogFormVisible">
-      <el-form ref="editForm" :model="editForm" :rules="rules" label-width="130px">
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisible" @close="handleClose">
+      <el-form
+        ref="editForm"
+        :model="editForm"
+        :rules="batch === 1 ? brules : srules"
+        label-width="130px"
+      >
         <el-form-item label="用户名" prop="username">
-          <el-input
-            v-model.trim="editForm.username"
-            :disabled="!disable.username"
-            class="h-40 w-200"
-          ></el-input>
+          <el-input v-model.trim="editForm.username" :disabled="batch" class="h-40 w-200"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="psw">
           <el-input
             v-model.trim="editForm.psw"
-            :disabled="!disable.psw"
+            :disabled="batch"
             class="h-40 w-200"
             type="password"
           ></el-input>
@@ -149,9 +157,6 @@
   </div>
 </template>
 <style lang="less" scoped>
-.el-breadcrumb {
-  margin-bottom: 15px;
-}
 .add-btn {
   display: inline-block;
   padding: 10px 15px;
@@ -184,7 +189,6 @@ export default {
     }
     return {
       keyword: '',
-      originalData: [],
       tableData: [],
       dataCount: null,
       loading: true,
@@ -195,9 +199,9 @@ export default {
       clickAble: true,
       institutes: ['信息学院', '化工学院', '机械学院', '文法学院'],
       dialogFormVisible: false,
+      batch: 0,
       disable: {
         username: true,
-        psw: true,
         institute: true,
         class: true,
         name: false,
@@ -228,12 +232,16 @@ export default {
         age: null
       },
       row: {},
-      rules: {
+      srules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
           { min: 3, max: 10, message: '用户名长度为3-10位', trigger: 'blur' }
         ],
         psw: [{ validator: validatePsw, trigger: 'blur' }],
+        institute: [{ required: true, message: '请输入学院' }],
+        class: [{ required: true, message: '请输入班级' }]
+      },
+      brules: {
         institute: [{ required: true, message: '请输入学院' }],
         class: [{ required: true, message: '请输入班级' }]
       }
@@ -243,6 +251,13 @@ export default {
     this.getUserList()
   },
   methods: {
+    handleChange($val, $row) {
+      if ($val === 1) {
+        this.handleEnable([$row])
+      } else {
+        this.handleDisable([$row])
+      }
+    },
     selectItem(item) {
       this.selections = item
     },
@@ -274,7 +289,6 @@ export default {
       await this.$http
         .get('/user', data)
         .then(res => {
-          this.originalData = res.data
           this.tableData = res.data.data
           this.dataCount = res.data.dataCount
         })
@@ -298,11 +312,11 @@ export default {
     statusFilter(value, row) {
       return value === row.status + ''
     },
+    handleClose() {
+      this.$refs.editForm.resetFields()
+    },
     handleDisable(rowArr) {
-      var idArr = []
-      rowArr.forEach(element => {
-        idArr.push(element.id)
-      })
+      var idArr = this.getID(rowArr)
       this.$http
         .patch('/user', {
           id: idArr,
@@ -318,11 +332,30 @@ export default {
           this.$message.error(err.data.msg)
         })
     },
-    handleEnable(rowArr) {
-      var idArr = []
-      rowArr.forEach(element => {
-        idArr.push(element.id)
+    handleDel(rowArr) {
+      this.$confirm('此操作将永久删除该设备, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
+        .then(() => {
+          var idArr = this.getID(rowArr)
+          this.$http
+            .delete('/user', { data: idArr })
+            .then(res => {
+              this.$message.success(`成功删除${res.data.data}条数据!`)
+              this.getUserList()
+            })
+            .catch(err => {
+              this.$message.error(err.data.msg)
+            })
+        })
+        .catch(() => {
+          this.$message.info('已取消删除')
+        })
+    },
+    handleEnable(rowArr) {
+      var idArr = this.getID(rowArr)
       this.$http
         .patch('/user', {
           id: idArr,
@@ -339,24 +372,35 @@ export default {
         })
     },
     handleEdit(row) {
-      this.row = row
-      this.backup.id = this.editForm.id = row.id
-      this.backup.username = this.editForm.username = row.username
-      this.backup.institute = this.editForm.institute = row.institute
-      this.backup.class = this.editForm.class = row.class
-      this.backup.name = this.editForm.name = row.name
-      this.backup.stu_num = this.editForm.stu_num = row.stu_num
-      this.backup.gender = this.editForm.gender = row.gender
-      this.backup.age = this.editForm.age = row.age
+      if (row instanceof Array) {
+        this.batch = 1
+      } else {
+        this.batch = 0
+        this.row = row
+        this.backup.id = this.editForm.id = row.id
+        this.backup.username = this.editForm.username = row.username
+        this.backup.institute = this.editForm.institute = row.institute
+        this.backup.class = this.editForm.class = row.class
+        this.backup.name = this.editForm.name = row.name
+        this.backup.stu_num = this.editForm.stu_num = row.stu_num
+        this.backup.gender = this.editForm.gender = row.gender
+        this.backup.age = this.editForm.age = row.age
+      }
       this.dialogFormVisible = true
     },
-    handleBatchEdit() {},
+    getID(arr) {
+      var idArr = []
+      arr.forEach(element => {
+        idArr.push(element.id)
+      })
+      return idArr
+    },
     async handleSubmit() {
       this.$refs.editForm.validate(valid => {
         if (!valid) return
         this.submitLoading = true
         var data = {}
-        var id = this.backup.id
+        var id = this.getIDFromSelections()
         // 只发送给后端修改过的数据
         for (var key in this.backup) {
           if (this.backup[key] !== this.editForm[key]) {
@@ -366,8 +410,12 @@ export default {
         this.$http
           .patch('user/' + id, data)
           .then(res => {
-            for (var key in data) {
-              this.row[key] = data[key]
+            if (this.batch === 0) {
+              for (var key in data) {
+                this.row[key] = data[key]
+              }
+            } else {
+              this.getUserList()
             }
             this.$message.success('编辑成功')
             this.submitLoading = false
@@ -390,7 +438,7 @@ export default {
   },
   watch: {
     $route(to, from) {
-      this.init()
+      this.getUserList()
     },
     selections() {
       if (this.selections.length === 0) {
