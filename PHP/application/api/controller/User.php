@@ -95,36 +95,17 @@ class User extends BaseController
         return $data;
     }
 
-    public function modifyInfo($id)
+    public function modifyInfo()
     {
+        (new Modify())->goCheck();
         $req = Request::instance();
-        $options = $req->param();
-        unset($options['id']);
-        // ��端已经做过处理
+        $data = $req->patch();
+        $options = $data['options'];
+        $id = $data['id'];
+        // 前端已经做过处理
         $res = UserModel::modify($id,$options);
         // $options = array_filter($options);
         // $res = UserModel::modifyUserByID($id,$options);
-        return $res;
-    }
-    /**
-     * Undocumented function.
-     *
-     * @author lzx <1562248279@qq.com>
-     * TODO:
-     * - 权限验证
-     *
-     * @return void
-     */
-    public function modifyStatus()
-    {
-        (new Modify())->goCheck();
-        $data = Request::instance()->patch();
-        $status = ['status'=>$data['status']];
-        $id = $data['id'];
-        UserModel::modifyUserByID($id, $status);
-        $res = [
-            'msg' => 'success',
-        ];
-        return json($res, 201);
+        return json(['data'=>$res]);
     }
 }

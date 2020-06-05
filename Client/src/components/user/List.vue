@@ -96,7 +96,7 @@
       <el-form
         ref="editForm"
         :model="editForm"
-        :rules="batch === 1 ? brules : srules"
+        :rules="batch ? brules : srules"
         label-width="130px"
       >
         <el-form-item label="用户名" prop="username">
@@ -199,7 +199,7 @@ export default {
       clickAble: true,
       institutes: ['信息学院', '化工学院', '机械学院', '文法学院'],
       dialogFormVisible: false,
-      batch: 0,
+      batch: false,
       disable: {
         username: true,
         institute: true,
@@ -241,10 +241,7 @@ export default {
         institute: [{ required: true, message: '请输入学院' }],
         class: [{ required: true, message: '请输入班级' }]
       },
-      brules: {
-        institute: [{ required: true, message: '请输入学院' }],
-        class: [{ required: true, message: '请输入班级' }]
-      }
+      brules: {}
     }
   },
   created() {
@@ -261,11 +258,6 @@ export default {
     selectItem(item) {
       this.selections = item
     },
-    // init() {
-    //   this.getCurrentPage()
-    //   this.getKeyword()
-    //   this.getUserList()
-    // },
     handleSizeChange(val) {
       this.limit = val
       this.getUserList()
@@ -297,15 +289,6 @@ export default {
         })
       this.loading = false
     },
-    // 在本地列表中search，分页则不适用
-    // search() {
-    //   var _this = this
-    //   this.tableData = this.originalData.filter(function(data) {
-    //     return (
-    //       data.username.toLowerCase().indexOf(_this.keyword.toLowerCase()) > -1
-    //     )
-    //   })
-    // },
     rankFilter(value, row) {
       return value === row.rank
     },
@@ -314,6 +297,14 @@ export default {
     },
     handleClose() {
       this.$refs.editForm.resetFields()
+      this.backup.id = this.editForm.id = ''
+      this.backup.username = this.editForm.username = ''
+      this.backup.institute = this.editForm.institute = ''
+      this.backup.class = this.editForm.class = ''
+      this.backup.name = this.editForm.name = ''
+      this.backup.stu_num = this.editForm.stu_num = ''
+      this.backup.gender = this.editForm.gender = ''
+      this.backup.age = this.editForm.age = ''
     },
     handleDisable(rowArr) {
       var idArr = this.getID(rowArr)
@@ -373,9 +364,9 @@ export default {
     },
     handleEdit(row) {
       if (row instanceof Array) {
-        this.batch = 1
+        this.batch = true
       } else {
-        this.batch = 0
+        this.batch = false
         this.row = row
         this.backup.id = this.editForm.id = row.id
         this.backup.username = this.editForm.username = row.username
@@ -400,7 +391,12 @@ export default {
         if (!valid) return
         this.submitLoading = true
         var data = {}
-        var id = this.getIDFromSelections()
+        var id
+        if (this.batch) {
+          id = this.getID(this.selections)
+        } else {
+          id = [this.row.id]
+        }
         // 只发送给后端修改过的数据
         for (var key in this.backup) {
           if (this.backup[key] !== this.editForm[key]) {
@@ -408,24 +404,23 @@ export default {
           }
         }
         this.$http
-          .patch('user/' + id, data)
+          .patch('user', { id: id, options: data })
           .then(res => {
-            if (this.batch === 0) {
+            if (this.batch) {
+              this.getUserList()
+            } else {
               for (var key in data) {
                 this.row[key] = data[key]
               }
-            } else {
-              this.getUserList()
             }
-            this.$message.success('编辑成功')
+            this.$message.success(`成功更新${res.data.data}条数据`)
             this.submitLoading = false
 
             this.dialogFormVisible = false
           })
           .catch(err => {
-            console.log(err)
+            this.$message.error(err.data.msg)
             this.submitLoading = false
-
             this.dialogFormVisible = false
           })
       })

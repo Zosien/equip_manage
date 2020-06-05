@@ -161,13 +161,13 @@ class User extends Model
             }
         }
         if(sizeof($user)){
-            self::modifyUserByID($id,$user);
+            $res = self::modifyUserByID($id,$user);
         }
         if(sizeof($info)){
             // self::table('user_info')->where('id','=',$id)->count()
-            self::modifyUserInfoByID($id,$info);
+            $res = self::modifyUserInfoByID($id,$info);
         }
-        return self::getUser($id);
+        return $res;
     }
     /**
      * 根据id修改信息

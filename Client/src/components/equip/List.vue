@@ -313,7 +313,7 @@ export default {
           }
         }
         this.$http
-          .patch('equip/' + id, data)
+          .patch('equip' + { id: id, options: data })
           .then(res => {
             if (this.batch === 0) {
               for (var key in data) {

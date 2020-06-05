@@ -6,11 +6,11 @@ class Modify extends BaseValidate
 {
     protected $rule = [
         'id' => 'require|array|positiveIntArray',
-        'status' => 'require|in:0,1',
+        'options' => 'require',
     ];
     protected $message = [
         'id.require' => 'id不能为空',
         'id.array' => 'id必须是数组', 
-        'status' => 'status参数错误',
+        'options' => 'status不能为空',
     ];
 }
