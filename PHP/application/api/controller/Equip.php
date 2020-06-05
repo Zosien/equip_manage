@@ -4,13 +4,20 @@ namespace app\api\controller;
 use app\api\model\Equip as EquipModel;
 use app\api\model\UploadHandler;
 use app\api\validate\EquipInfoValidate;
+use app\api\validate\FileValidator;
+use app\api\validate\IDArrayValidator;
+use app\api\validate\Modify;
 use app\api\validate\PageValidator;
+use app\lib\exception\ParameterException;
+use Exception;
 use think\Request;
 
 class Equip extends BaseController
 {
     protected $beforeActionList = [
-        'checkAdministratorScope' => ['only' => 'getEquipByKey,delEquip,save,upload'],
+        'checkAdministratorScope' => [
+            'only' => 'getEquipByKey,delEquipByID,save,upload,modifyInfo'
+        ],
     ];
     public function save()
     {
@@ -21,6 +28,7 @@ class Equip extends BaseController
     }
     public function upload()
     {
+        (new FileValidator())->goCheck();
         $file = Request::instance()->file('file');
         $path = ROOT_PATH . 'runtime' . DS . 'uploads'. DS;
         if($file){
@@ -31,35 +39,37 @@ class Equip extends BaseController
                 return json($res);
             }
         }
+        else{
+            throw new ParameterException();
+        }
     }
     public function getEquipByKey()
     {
         (new PageValidator())->goCheck();
-
         $req = Request::instance();
-        $page = $req->param('page') ? $req->param('page') : 1;
-        $limit = $req->param('limit') ? $req->param('limit') : 20;
+        $page = $req->param('page');
+        $limit = $req->param('limit');
         $keyword = $req->param('keyword');
         $data = EquipModel::getEquips($keyword, $this->scope,$page,$limit);
         
         return $data;
     }
-    public function modifyInfo($id)
+    public function modifyInfo()
     {
+        (new Modify())->goCheck();
         $req = Request::instance();
-        $options = $req->param();
-        unset($options['id']);
-        // 前端已经做过处理
+        $data = $req->patch();
+        $id = $data['id'];
+        $options = $data['options'];
         $res = EquipModel::modify($id,$options);
-        // $options = array_filter($options);
-        // $res = UserModel::modifyUserByID($id,$options);
         return json(['data' => $res]);
     }
-    public function delEquip()
+    public function delEquipByID()
     {
+        (new IDArrayValidator())->goCheck();
         $req = Request::instance();
-        $options = $req->param();
-        $res = EquipModel::delEquipByID($options);    
+        $id = $req->delete();
+        $res = EquipModel::delEquipByID($id);    
         return json(['data' => $res]);
     }
 }

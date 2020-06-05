@@ -37,11 +37,11 @@ class Equip extends Model
         $res = self::where('id','in',$id)->select();
         return $res;
     }
-    public static function modify($id,$options=[])
+    public static function modify($id=[],$options=[])
     {
-        self::where('id', 'in', $id)->update($options);
+        $res = self::where('id', 'in', $id)->update($options);
 
-        return self::getEquip($id);
+        return $res;
     }
     /**
      * 根据id数组删除设备
@@ -55,7 +55,7 @@ class Equip extends Model
         $sql = "update equip set status = 0 where id in (";
         $num = count($id);
         for($i = 0;$i<$num;$i++){
-            $sql .= $id[$i].",";
+            $sql .= "'".$id[$i]."',";
         }
         $sql = rtrim($sql,',');
         $sql .= ");";

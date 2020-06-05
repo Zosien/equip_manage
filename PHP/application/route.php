@@ -27,7 +27,6 @@ Route::get('api/user/:id', 'api/User/getUserById',[],['id'=>'\d+']);
 Route::get('api/user', 'api/User/getUserByKey');
 Route::delete('api/user', 'api/User/delUser');
 Route::patch('api/user','api/User/modifyInfo');
-// Route::patch('api/user', 'api/User/modifyStatus');
 Route::post('api/user/upload','api/User/upload');
 Route::post('api/user','api/User/save');
 
@@ -36,8 +35,8 @@ Route::post('api/user','api/User/save');
  */
 // Route::get('api/equip/:keyword', 'api/Equip/getEquipByKey',[],['keyword'=>'\w+']);
 Route::get('api/equip', 'api/Equip/getEquipByKey');
-Route::patch('api/equip/:id','api/Equip/modifyInfo',['id'=>'\d+']);
-Route::delete('api/equip', 'api/Equip/delEquip');
+Route::patch('api/equip/','api/Equip/modifyInfo');
+Route::delete('api/equip', 'api/Equip/delEquipByID');
 Route::post('api/equip/upload','api/Equip/upload');
 Route::post('api/equip','api/Equip/save');
 

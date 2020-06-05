@@ -147,7 +147,7 @@ export default {
     }
     return {
       keyword: '',
-      batch: 0,
+      batch: false,
       currentPage: 1,
       limit: 20,
       loading: false,
@@ -220,9 +220,11 @@ export default {
         type: 'warning'
       })
         .then(() => {
-          var idArr = this.getIDFromSelection(rowArr)
+          console.log(rowArr)
+
+          var idArr = this.getID(rowArr)
           this.$http
-            .delete('/equip', { data: idArr })
+            .delete('/equip', { data: { id: idArr } })
             .then(res => {
               this.$message.success(`成功删除${res.data.data}条数据!`)
               this.getEquipList()
@@ -274,18 +276,18 @@ export default {
         })
       this.loading = false
     },
-    getIDFromSelection() {
+    getID(arr) {
       var idArr = []
-      this.selections.forEach(element => {
+      arr.forEach(element => {
         idArr.push(element.id)
       })
       return idArr
     },
     handleEdit(row) {
       if (row instanceof Array) {
-        this.batch = 1
+        this.batch = true
       } else {
-        this.batch = 0
+        this.batch = false
         this.row = row
         this.backup.id = this.editForm.id = row.id
         this.backup.name = this.editForm.name = row.name
@@ -299,13 +301,26 @@ export default {
     },
     handleClose() {
       this.$refs.editForm.resetFields()
+      this.backup.id = this.editForm.id = ''
+      this.backup.name = this.editForm.name = ''
+      this.backup.price = this.editForm.price = ''
+      this.backup.useable = this.editForm.useable = ''
+      this.backup.factory = this.editForm.factory = ''
+      this.backup.buyer = this.editForm.buyer = ''
+      this.backup.lab = this.editForm.lab = ''
     },
     handleSubmit() {
       this.$refs.editForm.validate(valid => {
         if (!valid) return
         this.submitLoading = true
         var data = {}
-        var id = this.getIDFromSelection()
+        var id
+        if (this.batch) {
+          id = this.getID(this.selections)
+        } else {
+          id = [this.row.id]
+        }
+
         // 只发送给后端修改过的数据
         for (var key in this.backup) {
           if (this.backup[key] !== this.editForm[key]) {
@@ -313,9 +328,9 @@ export default {
           }
         }
         this.$http
-          .patch('equip' + { id: id, options: data })
+          .patch('equip', { id: id, options: data })
           .then(res => {
-            if (this.batch === 0) {
+            if (!this.batch) {
               for (var key in data) {
                 this.row[key] = data[key]
               }
@@ -323,13 +338,13 @@ export default {
               this.getEquipList()
             }
 
-            this.$message.success('编辑成功')
+            this.$message.success(`成功编辑${res.data.data}条数据`)
             this.submitLoading = false
 
             this.dialogFormVisible = false
           })
           .catch(err => {
-            console.log(err)
+            this.$message.error(err.data.msg)
             this.submitLoading = false
 
             this.dialogFormVisible = false
