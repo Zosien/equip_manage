@@ -45,6 +45,10 @@
           </el-form>
         </el-tab-pane>
         <el-tab-pane label="批量添加" name="second">
+          <div class="help">
+            通过excel文件批量添加，
+            <a href="http://db.com/user.xlsx" download="模板.xlsx">点击下载</a>模板文件
+          </div>
           <el-upload
             class="upload-demo"
             ref="upload"
@@ -67,6 +71,10 @@
 }
 .form-checkbox:first-child {
   margin-left: 15px;
+}
+.help {
+  font-size: 13px;
+  margin-bottom: 5px;
 }
 </style>
 <script>

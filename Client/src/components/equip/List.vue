@@ -54,9 +54,11 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" width="220">
           <template scope="scope">
             <div>
+              <!-- TODO:逻辑实现 -->
+              <el-button size="mini" type="primary" @click="handleEdit(scope.row)">报修</el-button>
               <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
               <el-button size="mini" type="danger" @click="handleDel([scope.row])">删除</el-button>
             </div>

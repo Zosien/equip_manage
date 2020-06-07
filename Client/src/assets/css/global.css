@@ -4,6 +4,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
+  min-width: 1370px;
 }
 a {
   text-decoration: none;
@@ -77,4 +78,12 @@ a {
 }
 .el-breadcrumb {
   margin-bottom: 15px;
+}
+.user-menu {
+  position: absolute;
+  top: 0px;
+  right: 70px;
+}
+.c-gray {
+  color: #ccc !important;
 }

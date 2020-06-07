@@ -5,8 +5,16 @@
         <img src="../assets/img/buct.jpg" alt="BUCT" class="head-img" />
         <span>实验室设备管理系统</span>
       </div>
-      <el-button type="info" @click="logout">退出</el-button>
-      {{current}}
+      <el-dropdown @command="handleMenu" class="user-menu">
+        <span class="el-dropdown-link c-gray" style="cursor: default">
+          {{userinfo.username}}&nbsp;&nbsp;
+          <i class="fa fa-user" aria-hidden="true"></i>
+        </span>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="changePsw">修改密码</el-dropdown-item>
+          <el-dropdown-item command="logout">退出</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
     </el-header>
     <el-container>
       <el-aside width="180px">
@@ -18,36 +26,45 @@
           router
           :default-active="currentUrl"
         >
-          <el-menu-item-group>
-            <template slot="title">用户管理</template>
-            <el-menu-item index="/user/list">用户列表</el-menu-item>
-          </el-menu-item-group>
-          <el-menu-item-group>
-            <template slot="title">数据统计</template>
-            <el-menu-item index="/report">用户报表</el-menu-item>
-          </el-menu-item-group>
-          <el-menu-item-group>
-            <template slot="title">设备管理</template>
-            <el-menu-item index="/equip/list">设备列表</el-menu-item>
+          <el-menu-item-group v-for="(items, index) in menu" :key="index">
+            <template slot="title">{{items.name}}</template>
+            <el-menu-item
+              :index="item.url"
+              v-for="(item, index) in items.child"
+              :key="index"
+            >{{item.name}}</el-menu-item>
           </el-menu-item-group>
         </el-menu>
       </el-aside>
       <el-main>
         <router-view></router-view>
       </el-main>
+      <changePsw :isShow="show" @close="change"></changePsw>
     </el-container>
   </el-container>
 </template>
 <script>
+import changePsw from './common/changePsw.vue'
 export default {
   data() {
     return {
       current: '',
-      currentUrl: ''
+      currentUrl: '',
+      userinfo: {},
+      show: false,
+      menu: {}
     }
+  },
+  components: {
+    changePsw: changePsw
   },
   mounted() {
     console.log(this.$route.path)
+  },
+  created() {
+    this.getMyInfo()
+    this.getMenu()
+    this.getCurrentUrl()
   },
   watch: {
     $router() {
@@ -55,6 +72,44 @@ export default {
     }
   },
   methods: {
+    getCurrentUrl() {
+      this.currentUrl = this.$route.path
+    },
+    getMenu() {
+      this.$http
+        .get('/menu')
+        .then(res => {
+          this.menu = res.data
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+    change(val) {
+      this.show = val
+    },
+    getMyInfo() {
+      this.$http
+        .get('/my')
+        .then(res => {
+          this.userinfo = res.data
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
+    handleMenu(command) {
+      switch (command) {
+        case 'changePsw':
+          this.change(true)
+          break
+        case 'logout':
+          this.logout()
+          break
+        default:
+          break
+      }
+    },
     logout() {
       this.$http
         .delete('/token')

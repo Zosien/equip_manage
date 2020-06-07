@@ -10,7 +10,7 @@ class RSADecrypt
     private $private_path;
     private $public_path;
     public function __construct() {
-        $this->private_path = getenv('PRIVATE');
+        $this->private_path = getenv('private');
         $this->public_path = getenv('PUBLIC');
         $this->_config['private_key'] = $this->_getContents($this->private_path);
         $this->_config['public_key'] = $this->_getContents($this->public_path);

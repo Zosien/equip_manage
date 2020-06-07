@@ -5,10 +5,12 @@ namespace app\api\controller;
 use app\api\model\FileHandler;
 use app\lib\exception\ParameterException;
 use app\lib\RSADecrypt;
+use think\Env;
 use think\Request;
 
 class ApiTest
 {
+    protected $beforeActionList = ['test' => ['only' =>'getTest']];
     public function getCache($name)
     {
         $cache = cache($name);
@@ -16,12 +18,13 @@ class ApiTest
     }
     public function getTest()
     {
-        $en = "dkfljsf";
-        $rsa = new RSADecrypt();
-        $de = $rsa->privDecrypt($en);
-        if(!$de){
-            throw new ParameterException();
-        }
+        var_dump("ok");
+        // $en = "dkfljsf";
+        // $rsa = new RSADecrypt();
+        // $de = $rsa->privDecrypt($en);
+        // if(!$de){
+        //     throw new ParameterException();
+        // }
     }
     public function postTest()
     {

@@ -42,7 +42,7 @@ class Token extends Model
 
     /**
      * 获取token
-     * TODO：根据header里面有无token判断是第一次获取token还是更新token.
+     * TODO: 根据header里面有无token判断是第一次获取token还是更新token.
      *
      * @return void
      */

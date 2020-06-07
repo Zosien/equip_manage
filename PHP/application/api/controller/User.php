@@ -2,6 +2,7 @@
 
 namespace app\api\controller;
 
+use app\api\model\Menu as MenuModel;
 use app\api\model\Token;
 use app\api\model\User as UserModel;
 use app\api\validate\Modify;
@@ -10,7 +11,7 @@ use think\Request;
 use app\api\model\UploadHandler as UploadModel;
 use app\api\validate\PageValidator;
 use app\api\validate\UserInfoValidate;
-use Exception;
+use app\lib\exception\ParameterException;
 
 class User extends BaseController
 {
@@ -20,7 +21,8 @@ class User extends BaseController
      * @var array
      */
     protected $beforeActionList = [
-        'checkAdministratorScope' => ['only' => 'getUserByKey,getUserById,delUser,activeUser,save,upload'],
+        'checkAdministratorScope' => 
+        ['only' => 'getuserbykey,getuserbyid,deluser,activeuser,save,upload,getmenubytoken']
     ];
     public function delUser()
     {
@@ -38,8 +40,6 @@ class User extends BaseController
     }
     /**
      * 批量添加用户文件处理
-     *
-     * @author lzx <1562248279@qq.com>
      *
      * @return affected rows
      */
@@ -59,15 +59,13 @@ class User extends BaseController
     /**
      * 根据id获取用户信息
      *
-     * @author lzx <1562248279@qq.com>
-     *
      * @param int $id
      *
      * @return void
      */
     public function getUserById($id)
     {
-        $scope = Token::getCurrentTokenVar('scope');
+        $scope = $this->scope;
         $res = UserModel::getUser($id);
         $res = UserModel::addEditAble($scope,$res);
         return $res;
@@ -76,8 +74,6 @@ class User extends BaseController
      * Undocumented function.
      * TODO:
      * - keyword参数验证
-     *
-     * @author lzx <1562248279@qq.com>
      *
      * @param string $keyword
      *
@@ -94,7 +90,19 @@ class User extends BaseController
         
         return $data;
     }
-
+    public function getInfoByToken()
+    {
+        $id = Token::getCurrentTokenVar('id');
+        $userInfo = UserModel::getUser($id);
+        
+        return $userInfo;
+    }
+    public function getMenuByToken()
+    {
+        $scope = $this->scope;
+        $menu =  MenuModel::getMenu($scope);
+        return $menu;
+    }
     public function modifyInfo()
     {
         (new Modify())->goCheck();
@@ -107,5 +115,27 @@ class User extends BaseController
         // $options = array_filter($options);
         // $res = UserModel::modifyUserByID($id,$options);
         return json(['data'=>$res]);
+    }
+    public function changePsw()
+    {
+        $id = Token::getCurrentTokenVar('id');
+        $data = Request::instance();
+        $options = $data->patch();
+        $old_psw = $options['old_psw'];
+        $new_psw = $options['new_psw'];
+        $psw = UserModel::get($id)->psw;
+        if($old_psw === $psw)
+        {
+            $res = UserModel::modifyUserByID($id,['psw'=>$new_psw]);
+            if($res == 1){
+                return json(['data'=>'修改成功']);
+            }
+            else{
+                return json(['data'=>'修改失败']);
+            }
+        }
+        else{
+            throw new ParameterException(['msg' => '密码错误！']);
+        }
     }
 }

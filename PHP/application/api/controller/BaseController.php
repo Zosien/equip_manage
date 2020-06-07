@@ -32,4 +32,18 @@ class BaseController extends Controller
             throw new TokenException();
         }
     }
+    protected function checkSuperAdministratorScope()
+    {
+        $scope = Token::getCurrentTokenVar('scope');
+        $this->scope = $scope;
+        if ($scope) {
+            if ($scope == ScopeEnum::Super) {
+                return true;
+            } else {
+                throw new ForbiddenException();
+            }
+        } else {
+            throw new TokenException();
+        }
+    }
 }

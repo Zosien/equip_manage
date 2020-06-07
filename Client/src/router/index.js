@@ -10,7 +10,7 @@ import Rights from '../components/power/Rights'
 import Report from '../components/report/Report'
 import Equip from '../components/equip/List'
 import EquipAdd from '../components/equip/Add'
-
+import Rules from '../components/power/Rule'
 import Cookies from 'js-cookie'
 Vue.use(VueRouter)
 
@@ -46,8 +46,15 @@ const router = new VueRouter({
           }
         },
         {
-          path: '/rights',
+          path: '/rights/list',
           component: Rights,
+          meta: {
+            requireAuth: true
+          }
+        },
+        {
+          path: '/rules/list',
+          component: Rules,
           meta: {
             requireAuth: true
           }

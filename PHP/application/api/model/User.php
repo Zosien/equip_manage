@@ -13,11 +13,11 @@ use think\Request;
 
 class User extends Model
 {
-    protected $hidden = ['create_time', 'update_time', 'scope', 'psw', 'user_id'];
+    protected $hidden = ['create_time', 'update_time', 'scope', 'psw', 'uid'];
 
     public function detail()
     {
-        return $this->hasOne('UserInfo', 'user_id', 'id');
+        return $this->hasOne('UserInfo', 'uid', 'id');
     }
 
     public function newUser($username, $psw)
@@ -74,10 +74,9 @@ class User extends Model
      */
     public static function getUser($id)
     {
-        $sql = "select * from user_view u left join user_info ui on u.id = ui.user_id where u.id = ? limit 1;";
+        $sql = "select * from user_view u left join user_info ui on u.id = ui.uid where u.id = ? limit 1;";
         $res = Db::query($sql,[$id])[0];
-        $res['psw'] = '';
-        unset($res['user_id']);
+        unset($res['uid']);
         return $res;
     }
     public static function addEditAble($scope,$arr)
@@ -127,13 +126,13 @@ class User extends Model
     public static function getUsers($keyword, $scope,$page=1,$limit=20)
     {
         if ($keyword) {
-            $dataSql = "select * from user u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope." and u.username like '%".$keyword."%' limit ".$limit." offset ".($page-1)*$limit.";";
-            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope." and u.username like '%".$keyword."%';";
+            $dataSql = "select * from user u left join user_info ui on u.id = ui.uid where u.status != -1 and u.scope < ".$scope." and u.username like '%".$keyword."%' limit ".$limit." offset ".($page-1)*$limit.";";
+            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.uid where u.status != -1 and u.scope < ".$scope." and u.username like '%".$keyword."%';";
             // $data = self::where('username', 'LIKE', "%$keyword%")->where('scope', '<', $scope)->with('details')->limit($limit)->page($page)->select();
             // $count = self::where('username', 'LIKE', "%$keyword%")->where('scope', '<', $scope)->count('id');
         } else {
-            $dataSql = "select * from user_view u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope." limit ".$limit." offset ".($page-1)*$limit.";";
-            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.user_id where u.status != -1 and u.scope < ".$scope;
+            $dataSql = "select * from user_view u left join user_info ui on u.id = ui.uid where u.status != -1 and u.scope < ".$scope." limit ".$limit." offset ".($page-1)*$limit.";";
+            $countSql = "select count(*) count from user_view u left join user_info ui on u.id = ui.uid where u.status != -1 and u.scope < ".$scope;
         }
         $data = Db::query($dataSql);
             //数据绑定有数字变字符串的问题
@@ -185,7 +184,7 @@ class User extends Model
     }
     public static function modifyUserInfoByID($id=[], $options)
     {
-        $res = self::table('user_info')->where('user_id', 'in', $id)->update($options);
+        $res = self::table('user_info')->where('uid', 'in', $id)->update($options);
 
         return $res;
     }
